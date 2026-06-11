@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
@@ -8,10 +9,13 @@ import { cn } from "@/lib/utils";
 /**
  * Satu navbar, dua varian:
  * - "landing": tautan section + CTA "Open app".
- * - "app": jalur balik yang jelas ("Back to site") + wallet connect.
+ * - "app": navigasi antar halaman app (Dashboard, Agents) + jalur balik ke
+ *   landing ("Back to site") + wallet connect.
  * Logo selalu menautkan ke beranda, jadi kedua arah selalu punya navigasi.
  */
 export function Navbar({ variant }: { variant: "landing" | "app" }) {
+  const pathname = usePathname();
+
   return (
     <nav className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-sm">
       <div
@@ -20,12 +24,17 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
           variant === "landing" ? "max-w-6xl" : "max-w-7xl",
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
           <Logo />
           {variant === "app" && (
-            <span className="hidden font-mono text-[11px] uppercase tracking-wide text-ink-faint sm:inline">
-              / Dashboard
-            </span>
+            <div className="hidden items-center gap-1 sm:flex">
+              <AppLink href="/app" active={pathname === "/app"}>
+                Dashboard
+              </AppLink>
+              <AppLink href="/app/agents" active={pathname === "/app/agents"}>
+                Agents
+              </AppLink>
+            </div>
           )}
         </div>
 
@@ -56,6 +65,30 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     <Link
       href={href}
       className="hidden text-sm text-ink-muted transition-colors hover:text-ink sm:block"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function AppLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "rounded px-3 py-1.5 text-sm transition-colors",
+        active
+          ? "bg-gold-tint font-medium text-ink"
+          : "text-ink-muted hover:text-ink",
+      )}
     >
       {children}
     </Link>

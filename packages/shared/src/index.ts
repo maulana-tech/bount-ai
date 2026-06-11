@@ -9,4 +9,7 @@ export type {
   ActivityEvent,
   DelegationProof,
   SpikeResult,
-} from "./types.js";
+} from "./types";
+
+export { CAPABILITIES } from "./capabilities";
+export type { Capability } from "./capabilities";
