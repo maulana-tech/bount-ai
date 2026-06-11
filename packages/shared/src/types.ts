@@ -4,8 +4,13 @@
  * Lihat PROJECT.md untuk konteks alur.
  */
 
-/** Peran tiap aktor dalam sistem. */
-export type AgentRole = "concierge" | "research" | "media";
+/**
+ * Identitas aktor/kapabilitas. "user" & "concierge" direservasi; sisanya =
+ * id kapabilitas dinamis dari registry agent (research, writing, image, video,
+ * audio, translate, …). Sengaja string terbuka — agent ini umum, bukan terbatas
+ * ke beberapa tugas.
+ */
+export type AgentRole = string;
 
 /** Status pembayaran on-chain (sumber: webhook 1Shot). */
 export type PaymentStatus = "pending" | "confirmed" | "failed";
@@ -39,7 +44,8 @@ export interface DelegationNode {
 
 /** Satu sub-tugas hasil perencanaan Concierge (via Venice). */
 export interface SubTask {
-  agent: Exclude<AgentRole, "concierge">;
+  /** id kapabilitas yang dipilih (lihat registry agent) */
+  agent: AgentRole;
   description: string;
   /** estimasi biaya USD */
   estimatedCost: number;

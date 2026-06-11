@@ -13,9 +13,8 @@ import {
 } from "./integrations/delegation.js";
 import { paidFetch } from "./integrations/x402.js";
 import { SELLER } from "./routes/seller.js";
+import { CAP_BY_ID } from "./capabilities.js";
 import { config } from "./config.js";
-
-const LABEL: Record<string, string> = { research: "Research", media: "Media" };
 
 /**
  * Fase 2 vertical-slice: rencana → delegasi root (user → ven-AI) → redelegasi
@@ -54,6 +53,7 @@ export async function runSpike(request: string): Promise<SpikeResult> {
   let at = 0;
 
   for (const t of plan.subtasks) {
+    const capability = CAP_BY_ID[t.agent];
     const specialist = newParty();
 
     // 2) Redelegasi: ven-AI → specialist (sub-cap, hanya menyempit).
@@ -73,15 +73,16 @@ export async function runSpike(request: string): Promise<SpikeResult> {
     nodes.push({
       id: t.agent,
       role: t.agent,
-      label: LABEL[t.agent] ?? t.agent,
+      label: capability?.label ?? t.agent,
       cap: t.estimatedCost,
       spent: 0,
       active: true,
     });
 
-    // 3) Specialist membayar seller via x402, dalam batas sub-cap.
+    // 3) Specialist membayar layanan kapabilitasnya via x402, dalam sub-cap.
+    const product = capability?.product ?? "dataset";
     const res = await paidFetch(
-      `${sellerBase}/seller/data?q=${encodeURIComponent(t.description)}`,
+      `${sellerBase}/seller/buy?product=${product}&q=${encodeURIComponent(request)}`,
       specialist,
       { maxPayUsd: t.estimatedCost },
     );
