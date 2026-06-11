@@ -16,9 +16,9 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Concierge",
+  title: "ven-AI",
   description:
-    "Beri AI sebuah budget dan izin terbatas — ia merencanakan, mendelegasikan, dan membayar layanan sendiri, dalam batas yang kamu kontrol.",
+    "Give an AI a budget and a bounded permission — it plans, delegates, and pays for services on your behalf, within limits you control.",
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>
         <Providers>{children}</Providers>
       </body>

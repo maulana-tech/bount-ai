@@ -17,14 +17,14 @@ export function Hero() {
           </Reveal>
           <Reveal delay={0.05}>
             <h1 className="mt-5 text-balance text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
-              Beri AI sebuah budget. Bukan dompetmu.
+              Give an AI a budget. Not your wallet.
             </h1>
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-muted">
-              Concierge merencanakan, mendelegasikan, dan membayar layanan atas
-              namamu — di dalam plafon yang kamu tentukan, dan bisa kamu cabut
-              kapan saja. Setiap rupiah yang bergerak terbukti on-chain.
+              ven-AI plans, delegates, and pays for services on your behalf —
+              within a cap you set and can revoke anytime. Every dollar that
+              moves is provable on-chain.
             </p>
           </Reveal>
           <Reveal delay={0.15}>
@@ -33,19 +33,19 @@ export function Hero() {
                 href="/app"
                 className="rounded bg-gold px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gold-hover"
               >
-                Buka App
+                Open app
               </Link>
               <Link
-                href="#cara"
+                href="#how"
                 className="rounded border border-line px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-panel-2"
               >
-                Lihat cara kerja
+                See how it works
               </Link>
             </div>
           </Reveal>
         </div>
 
-        {/* Product preview — komponen asli, bukan mockup */}
+        {/* Product preview — real components, not a mockup */}
         <Reveal delay={0.2}>
           <div className="space-y-4">
             <BudgetMeter spent={MOCK_BUDGET.spent} cap={MOCK_BUDGET.cap} />

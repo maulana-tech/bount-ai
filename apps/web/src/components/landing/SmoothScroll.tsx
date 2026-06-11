@@ -13,6 +13,7 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     const lenis = new Lenis({
       duration: 1.05,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      anchors: true, // tautan #how / #features scroll halus
     });
 
     let raf = 0;

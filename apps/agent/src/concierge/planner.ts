@@ -15,8 +15,8 @@ export async function planRequest(request: string): Promise<TaskPlan> {
   return {
     request,
     subtasks: [
-      { agent: "research", description: "Riset kompetitor", estimatedCost: 6 },
-      { agent: "media", description: "Buat poster ringkasan", estimatedCost: 5 },
+      { agent: "research", description: "Research competitors", estimatedCost: 6 },
+      { agent: "media", description: "Make summary poster", estimatedCost: 5 },
     ],
   };
 }

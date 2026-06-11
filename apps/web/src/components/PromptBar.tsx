@@ -11,11 +11,11 @@ export function PromptBar() {
     <CornerFrame>
       <div className="flex items-center gap-3">
         <input
-          placeholder="ketik permintaan — mis. riset 3 kompetitor lalu buat poster"
+          placeholder="type a request — e.g. research 3 competitors, then make a poster"
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-faint"
         />
         <button className="rounded bg-gold px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gold-hover">
-          Kirim
+          Send
         </button>
       </div>
     </CornerFrame>

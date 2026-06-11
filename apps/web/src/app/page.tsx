@@ -1,5 +1,5 @@
 import { SmoothScroll } from "@/components/landing/SmoothScroll";
-import { LandingNav } from "@/components/landing/LandingNav";
+import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/landing/Hero";
 import { Problem } from "@/components/landing/Problem";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -16,7 +16,7 @@ import { Footer } from "@/components/Footer";
 export default function LandingPage() {
   return (
     <SmoothScroll>
-      <LandingNav />
+      <Navbar variant="landing" />
       <Hero />
       <Problem />
       <HowItWorks />

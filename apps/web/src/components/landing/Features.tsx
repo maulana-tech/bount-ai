@@ -2,41 +2,41 @@ import { Reveal } from "./Reveal";
 
 const FEATURES = [
   {
-    title: "Izin terbatas, bukan kunci penuh",
-    body: "Plafon, kategori, dan masa berlaku yang kamu tentukan. Cabut kapan saja — agent berhenti bisa membayar saat itu juga.",
+    title: "Bounded permission, not full keys",
+    body: "A cap, categories, and expiry you define. Revoke anytime — the agent loses the ability to pay that instant.",
   },
   {
-    title: "Budget yang terlihat bergerak",
-    body: "Saldo dan setiap pembayaran tampil real-time. Tahu persis berapa terpakai dan berapa tersisa, tanpa menebak.",
+    title: "A budget you watch move",
+    body: "Balance and every payment update in real time. Know exactly what's spent and what's left, no guessing.",
   },
   {
-    title: "Agent yang saling mendelegasi",
-    body: "Concierge membagi sub-budget ke agent spesialis, masing-masing dengan batasnya sendiri. Total tak pernah melebihi plafonmu.",
+    title: "Agents that delegate to each other",
+    body: "ven-AI splits sub-budgets across specialist agents, each with its own limit. The total never exceeds your cap.",
   },
   {
-    title: "Bayar-per-pakai lewat x402",
-    body: "Tiap agent membayar layanan yang benar-benar dipakainya — data, model, generasi — sebagai micropayment, bukan langganan.",
+    title: "Pay-per-use via x402",
+    body: "Each agent pays only for what it actually uses — data, models, generation — as micropayments, not subscriptions.",
   },
   {
-    title: "Gas dibayar stablecoin",
-    body: "Transaksi direlay lewat 1Shot; biaya gas dibayar USDC. Status datang dari webhook, bukan polling tebak-tebakan.",
+    title: "Gas paid in stablecoins",
+    body: "Transactions are relayed through 1Shot; gas is paid in USDC. Status comes from webhooks, not guesswork polling.",
   },
   {
-    title: "Setiap aksi terbukti on-chain",
-    body: "Bukan klaim teks. Tiap pembayaran punya hash transaksi yang bisa kamu telusuri sendiri di explorer.",
+    title: "Every action provable on-chain",
+    body: "Not text claims. Each payment has a transaction hash you can trace in an explorer yourself.",
   },
 ];
 
 export function Features() {
   return (
-    <section id="fitur" className="border-t border-line bg-panel">
+    <section id="features" className="border-t border-line bg-panel">
       <div className="mx-auto max-w-6xl px-4 py-24">
         <Reveal>
           <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-            Fitur
+            Features
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-            Dibangun supaya AI boleh memegang uang dengan aman.
+            Built so an AI can hold money safely.
           </h2>
         </Reveal>
 

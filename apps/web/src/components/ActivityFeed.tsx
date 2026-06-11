@@ -9,7 +9,7 @@ import { usd } from "@/lib/utils";
  */
 export function ActivityFeed({ events }: { events: ActivityEvent[] }) {
   return (
-    <CornerFrame label="Aktivitas">
+    <CornerFrame label="Activity">
       <ul className="divide-y divide-line">
         {events.map((e) => (
           <li key={e.id} className="flex items-center gap-3 py-2.5">

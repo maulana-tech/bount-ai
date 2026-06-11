@@ -11,14 +11,14 @@ export const MOCK_BUDGET: BudgetState = { cap: 50, spent: 11 };
 
 export const MOCK_DELEGATION: DelegationNode[] = [
   { id: "user", role: "user", label: "User", cap: 50, spent: 11, active: true },
-  { id: "concierge", role: "concierge", label: "Concierge", cap: 50, spent: 11, active: true },
+  { id: "concierge", role: "concierge", label: "ven-AI", cap: 50, spent: 11, active: true },
   { id: "research", role: "research", label: "Research", cap: 30, spent: 6, active: true },
   { id: "media", role: "media", label: "Media", cap: 20, spent: 5, active: true },
 ];
 
 export const MOCK_FEED: ActivityEvent[] = [
-  { id: "e1", agent: "research", action: "Akses data kompetitor #1", amount: 2, status: "confirmed", at: 1 },
-  { id: "e2", agent: "research", action: "Akses data kompetitor #2", amount: 2, status: "confirmed", at: 2 },
-  { id: "e3", agent: "research", action: "Akses data kompetitor #3", amount: 2, status: "confirmed", at: 3 },
-  { id: "e4", agent: "media", action: "Generate poster ringkasan", amount: 5, status: "pending", at: 4 },
+  { id: "e1", agent: "research", action: "Fetch competitor data #1", amount: 2, status: "confirmed", at: 1 },
+  { id: "e2", agent: "research", action: "Fetch competitor data #2", amount: 2, status: "confirmed", at: 2 },
+  { id: "e3", agent: "research", action: "Fetch competitor data #3", amount: 2, status: "confirmed", at: 3 },
+  { id: "e4", agent: "media", action: "Generate summary poster", amount: 5, status: "pending", at: 4 },
 ];

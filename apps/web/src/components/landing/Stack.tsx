@@ -14,7 +14,7 @@ export function Stack() {
     <section className="mx-auto max-w-6xl px-4 py-20">
       <Reveal>
         <p className="text-center text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-          Dibangun di atas
+          Built on
         </p>
       </Reveal>
       <Reveal delay={0.05}>

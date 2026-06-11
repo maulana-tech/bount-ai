@@ -3,35 +3,35 @@ import { Reveal } from "./Reveal";
 const STEPS = [
   {
     n: "01",
-    title: "Kasih jatah & aturan",
-    body: "Sambungkan dompet, lalu setujui sekali: plafon (mis. $50), kategori, dan masa berlaku. Bukan akses penuh — hanya amplop berisi $50.",
+    title: "Set a budget and rules",
+    body: "Connect a wallet, then approve once: a cap (e.g. $50), categories, and an expiry. Not full access — just an envelope holding $50.",
   },
   {
     n: "02",
-    title: "Tulis permintaan",
-    body: "Satu kalimat, mis. “riset 3 kompetitor lalu buat poster”. Concierge memecahnya jadi sub-tugas dan mengalokasikan budget.",
+    title: "Write a request",
+    body: "One sentence, e.g. “research 3 competitors, then make a poster.” ven-AI breaks it into sub-tasks and allocates the budget.",
   },
   {
     n: "03",
-    title: "Agent mendelegasi & bekerja",
-    body: "Concierge meneruskan sub-budget ke agent spesialis. Tiap agent membayar layanan yang dipakainya sendiri lewat x402.",
+    title: "Agents delegate and work",
+    body: "ven-AI passes sub-budgets to specialist agents. Each pays for the services it uses — data, models, generation — via x402.",
   },
   {
     n: "04",
-    title: "Hasil + bukti",
-    body: "Kamu terima hasilnya plus jejak audit: siapa membayar apa, berapa, sisa berapa. Sisa yang tak terpakai tetap milikmu.",
+    title: "Result and proof",
+    body: "You get the output plus an audit trail: who paid what, how much, how much is left. Unspent budget stays yours.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="cara" className="mx-auto max-w-6xl px-4 py-24">
+    <section id="how" className="mx-auto max-w-6xl px-4 py-24">
       <Reveal>
         <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-          Cara kerja
+          How it works
         </p>
         <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-          Kamu memberi tugas dan jatah sekali. Sisanya berjalan sendiri.
+          You give the task and the budget once. The rest runs on its own.
         </h2>
       </Reveal>
 

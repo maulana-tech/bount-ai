@@ -22,13 +22,13 @@ export function BudgetMeter({
       <div className="flex items-end justify-between gap-4">
         <div>
           <div className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-            Sisa
+            Remaining
           </div>
           <div className="font-mono text-3xl font-medium tnum text-gold">
             ${usd(remaining)}
           </div>
           <div className="mt-1 font-mono text-xs tnum text-ink-muted">
-            ${usd(spent)} terpakai / ${usd(cap)} plafon
+            ${usd(spent)} spent / ${usd(cap)} cap
           </div>
         </div>
         {onRevoke && (
@@ -36,7 +36,7 @@ export function BudgetMeter({
             onClick={onRevoke}
             className="rounded border border-danger/40 px-3 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-tint"
           >
-            Cabut izin
+            Revoke
           </button>
         )}
       </div>

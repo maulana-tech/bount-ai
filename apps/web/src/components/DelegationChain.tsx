@@ -14,7 +14,7 @@ export function DelegationChain({ nodes }: { nodes: DelegationNode[] }) {
   );
 
   return (
-    <CornerFrame label="Delegasi">
+    <CornerFrame label="Delegation">
       <div className="flex items-center gap-2">
         {user && <NodeChip name={user.label} cap={user.cap} active={user.active} />}
         <Connector />
