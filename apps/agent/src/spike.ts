@@ -1,4 +1,5 @@
 import {
+  type AgentOutput,
   type ActivityEvent,
   type Capability,
   type DelegationNode,
@@ -16,6 +17,9 @@ import {
 import { paidFetch } from "./integrations/x402.js";
 import { SELLER } from "./routes/seller.js";
 import { config } from "./config.js";
+import { runResearch } from "./agents/research.js";
+import { runMedia } from "./agents/media.js";
+import { runText } from "./agents/text.js";
 
 /**
  * Fase 2 vertical-slice: rencana → delegasi root (user → ven-AI) → redelegasi
@@ -59,6 +63,7 @@ export async function runSpike(
     { id: "concierge", role: "concierge", label: "ven-AI", cap, spent: 0, active: true },
   ];
   const activity: ActivityEvent[] = [];
+  const outputs: AgentOutput[] = [];
 
   let spent = 0;
   let at = 0;
@@ -113,6 +118,21 @@ export async function runSpike(
     });
     const node = nodes.find((n) => n.id === t.agent);
     if (node) node.spent = res.paid;
+
+    // 4) Eksekusi specialist agent — hasil beneran pakai Venice AI.
+    if (t.agent === "research") {
+      const { summary } = await runResearch(request);
+      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text: summary });
+    } else if (t.agent === "image") {
+      const { imageUrl } = await runMedia(request);
+      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "image", imageUrl });
+    } else if (t.agent === "writing") {
+      const { text } = await runText(request, "You are a professional copywriter. Write content in Indonesian.");
+      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text });
+    } else if (t.agent === "translate") {
+      const { text } = await runText(request, "You are a professional translator. Translate accurately.");
+      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text });
+    }
   }
 
   const concierge = nodes.find((n) => n.role === "concierge");
@@ -126,6 +146,7 @@ export async function runSpike(
     delegation: nodes,
     activity,
     proofs,
+    outputs,
     settlement: "simulated",
     relayed: false,
   };
