@@ -55,7 +55,7 @@ export default function Page() {
             <DelegationChain nodes={delegation} />
             <ActivityFeed events={feed} />
           </div>
-          <ResultPanel />
+          <ResultPanel outputs={result?.outputs ?? []} />
         </div>
 
         {error && (
