@@ -37,7 +37,7 @@ export async function runSpike(
   );
 
   const plan = await planRequest(request, pool);
-  const sellerBase = `http://localhost:${config.port}`;
+  const sellerBase = config.agentUrl;
 
   const user = newParty();
   const agent = newParty();
