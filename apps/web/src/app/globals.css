@@ -22,3 +22,25 @@
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   }
 }
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.25s ease-out both;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .typing-dots::after {
+    content: "● ● ●";
+    letter-spacing: 3px;
+    animation: typing-pulse 1.4s infinite;
+  }
+
+  @keyframes typing-pulse {
+    0%, 60%, 100% { opacity: 0.3; }
+    30%           { opacity: 1; }
+  }
+}
