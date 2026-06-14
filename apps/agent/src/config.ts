@@ -1,6 +1,8 @@
 /** Konfigurasi service agent dari environment. */
 export const config = {
   port: Number(process.env.PORT ?? 8787),
+  /** Public URL of the agent itself (used to self-reference routes like /seller/buy). */
+  agentUrl: process.env.AGENT_PUBLIC_URL ?? `http://localhost:${Number(process.env.PORT ?? 8787)}`,
 
   /**
    * Chain target (keputusan Fase 0: Base). Dev di Base Sepolia (84532).
