@@ -1,4 +1,5 @@
 import { CAPABILITIES, type Capability } from "./shared.js";
+import { config } from "./config.js";
 
 /**
  * Logika pemilihan kapabilitas. Data registry bawaan ada di `@concierge/shared`;
@@ -7,12 +8,64 @@ import { CAPABILITIES, type Capability } from "./shared.js";
 
 /**
  * Pilih kapabilitas yang relevan untuk sebuah permintaan dari `pool` (bawaan +
- * custom). Heuristik berbasis kata kunci (dinamis — menangani permintaan apa
- * pun). Fase 3: ganti dengan reasoning Venice yang memilih + mengalokasi budget.
+ * custom). Kalau VENICE_API_KEY tersedia, pakai Venice AI untuk milih; fallback
+ * ke heuristik keyword.
  */
-export function selectCapabilities(
+export async function selectCapabilities(
   request: string,
   pool: Capability[] = CAPABILITIES,
+): Promise<Capability[]> {
+  if (config.venice.apiKey) {
+    try {
+      return await veniceSelect(request, pool);
+    } catch {
+      // fallback ke heuristik kalau Venice error
+    }
+  }
+  return heuristicSelect(request, pool);
+}
+
+/** Pilih kapabilitas via Venice AI — paham konteks, bisa milih yang relevan */
+async function veniceSelect(
+  request: string,
+  pool: Capability[],
+): Promise<Capability[]> {
+  const catalog = pool
+    .map((c) => `- ${c.id}: ${c.description} (keywords: ${c.keywords.join(", ")})`)
+    .join("\n");
+
+  const system = `Kamu adalah planner AI. Dari daftar kapabilitas berikut, pilih 1-4 yang PALING relevan untuk permintaan user. Balas hanya dengan JSON array of ids, misal: ["research","writing"]\n\nDaftar kapabilitas:\n${catalog}`;
+
+  const res = await fetch(`${config.venice.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.venice.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "z-ai-glm-5-turbo",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: request },
+      ],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Venice select ${res.status}`);
+
+  const data = (await res.json()) as {
+    choices: { message: { content: string } }[];
+  };
+  const text = data.choices?.[0]?.message?.content ?? "";
+  const ids: string[] = JSON.parse(text);
+  const byId = new Map(pool.map((c) => [c.id, c]));
+  return ids.map((id) => byId.get(id)).filter(Boolean) as Capability[];
+}
+
+/** Heuristik keyword — fallback kalau Venice gak tersedia / error */
+function heuristicSelect(
+  request: string,
+  pool: Capability[],
 ): Capability[] {
   const q = request.toLowerCase();
   const scored = pool.map((c) => ({
@@ -28,8 +81,6 @@ export function selectCapabilities(
     .sort((a, b) => b.score - a.score)
     .map((x) => x.c);
 
-  // Tidak ada kecocokan → default aman: riset + tulis ringkasan, atau dua
-  // entri pertama pool bila pool custom-only.
   if (picked.length === 0) {
     picked = pool.filter((c) => c.id === "research" || c.id === "writing");
     if (picked.length === 0) picked = pool.slice(0, 2);
