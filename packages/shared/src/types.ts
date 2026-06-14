@@ -72,6 +72,15 @@ export interface DelegationProof {
   capUsd: number;
 }
 
+/** Output dari satu specialist agent. */
+export interface AgentOutput {
+  agent: string;
+  label: string;
+  type: "text" | "image";
+  text?: string;
+  imageUrl?: string;
+}
+
 /**
  * Hasil satu putaran vertical-slice (Fase 2 spike): rencana → delegasi +
  * redelegasi (nyata) → pembayaran x402 → jejak. `settlement`/`relayed`
@@ -83,6 +92,7 @@ export interface SpikeResult {
   delegation: DelegationNode[];
   activity: ActivityEvent[];
   proofs: DelegationProof[];
+  outputs: AgentOutput[];
   settlement: "simulated" | "onchain";
   relayed: boolean;
 }
