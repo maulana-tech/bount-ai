@@ -58,6 +58,81 @@ export default function Page() {
           </div>
         </div>
 
+        {/* preview cards — showcase UI */}
+        <div className="mb-8">
+          <CornerFrame label="Preview">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <PreviewCard
+                title="Chat"
+                desc="Conversational interface with real AI responses, markdown rendering, and image support."
+                href="/app/chat"
+              >
+                <div className="space-y-2">
+                  <div className="flex justify-end">
+                    <div className="w-3/4 rounded border border-gold/30 bg-gold-tint px-3 py-2">
+                      <p className="font-mono text-[10px] text-ink">
+                        research the latest AI trends
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-3/4 rounded border border-line bg-panel px-3 py-2">
+                    <div className="mb-1 flex gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-gold/60" />
+                      <span className="font-mono text-[9px] uppercase text-ink-faint">
+                        agent
+                      </span>
+                    </div>
+                    <p className="font-mono text-[10px] text-ink-muted">
+                      Here are the latest AI trends in 2026…
+                    </p>
+                  </div>
+                </div>
+              </PreviewCard>
+
+              <PreviewCard
+                title="Agents"
+                desc="Specialist capabilities — research, writing, image, video, audio, translation."
+                href="/app/agents"
+              >
+                <div className="space-y-1.5">
+                  {["Research", "Copywriting", "Image"].map((name) => (
+                    <div
+                      key={name}
+                      className="flex items-center justify-between border border-line bg-panel px-3 py-2"
+                    >
+                      <span className="font-mono text-[10px] text-ink">{name}</span>
+                      <span className="font-mono text-[9px] text-gold">$2</span>
+                    </div>
+                  ))}
+                </div>
+              </PreviewCard>
+
+              <PreviewCard
+                title="Delegation"
+                desc="On-chain budget delegation with ERC-7710 smart accounts and x402 payments."
+                href="/app"
+              >
+                <div className="rounded border border-line bg-panel p-3">
+                  <div className="mb-2 font-mono text-[9px] uppercase text-ink-faint">
+                    budget
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-mono text-lg tnum text-gold">$39</span>
+                    <span className="font-mono text-[10px] text-ink-faint">remaining</span>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-panel-2">
+                    <div className="h-full w-1/4 rounded-full bg-gold" />
+                  </div>
+                  <div className="mt-1.5 flex justify-between font-mono text-[9px] text-ink-faint">
+                    <span>$11 spent</span>
+                    <span>$50 cap</span>
+                  </div>
+                </div>
+              </PreviewCard>
+            </div>
+          </CornerFrame>
+        </div>
+
         {/* agent capabilities grid */}
         <div className="mb-8">
           <CornerFrame label="Capabilities">
@@ -97,5 +172,32 @@ export default function Page() {
         <ActivityFeed events={feed} />
       </main>
     </>
+  );
+}
+
+function PreviewCard({
+  title,
+  desc,
+  href,
+  children,
+}: {
+  title: string;
+  desc: string;
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col border border-line bg-panel transition-colors hover:border-gold/50"
+    >
+      <div className="border-b border-line bg-panel-2/50 p-4">{children}</div>
+      <div className="p-4">
+        <h3 className="text-sm font-semibold tracking-tight group-hover:text-gold">
+          {title}
+        </h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink-muted">{desc}</p>
+      </div>
+    </Link>
   );
 }
