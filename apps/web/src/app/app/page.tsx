@@ -142,14 +142,16 @@ function PreviewVideo({
       href={href}
       className="group flex flex-col border border-line bg-panel transition-colors hover:border-gold/50"
     >
-      <div className="border-b border-line bg-panel-2/50 p-0">
+      <div className="relative border-b border-line bg-panel-2/50">
+        <div className="aspect-[16/9] animate-pulse rounded bg-line/30" />
         <video
           src={src}
           autoPlay
           muted
           loop
           playsInline
-          className="w-full aspect-[16/9] object-cover"
+          preload="auto"
+          className="absolute inset-0 h-full w-full object-cover"
         />
       </div>
       <div className="p-4">
