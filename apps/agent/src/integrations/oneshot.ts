@@ -52,8 +52,26 @@ export async function relayTransaction(_payload: unknown): Promise<RelayResult> 
   throw new Error("relayTransaction: belum diimplementasi (Fase 2 on-chain)");
 }
 
-/** Verifikasi tanda tangan webhook 1Shot. */
-export function verifyWebhook(_body: string, _signature: string): boolean {
-  // TODO Fase 2: HMAC dengan ONESHOT_WEBHOOK_SECRET
-  return false;
+/** Verifikasi tanda tangan webhook 1Shot (Ed25519 via public key). */
+export async function verifyWebhook(body: string, signature: string): Promise<boolean> {
+  const pubKeyB64 = config.oneshot.webhookSecret;
+  if (!pubKeyB64 || !signature) return false;
+
+  try {
+    const pubKeyBytes = Uint8Array.from(atob(pubKeyB64), (c) => c.charCodeAt(0));
+    const sigBytes = Uint8Array.from(atob(signature), (c) => c.charCodeAt(0));
+    const encoder = new TextEncoder();
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      pubKeyBytes,
+      { name: "Ed25519" },
+      false,
+      ["verify"],
+    );
+
+    return await crypto.subtle.verify("Ed25519", key, sigBytes, encoder.encode(body));
+  } catch {
+    return false;
+  }
 }
