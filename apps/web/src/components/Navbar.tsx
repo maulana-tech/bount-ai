@@ -34,6 +34,9 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
               <AppLink href="/app/agents" active={pathname === "/app/agents"}>
                 Agents
               </AppLink>
+              <AppLink href="/app/chat" active={pathname === "/app/chat"}>
+                Chat
+              </AppLink>
             </div>
           )}
         </div>
