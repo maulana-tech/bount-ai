@@ -8,6 +8,10 @@ import { spikeRoute } from "./routes/spike.js";
 const app = new Hono();
 
 app.use("*", cors());
+app.onError((err, c) => {
+  console.error("Hono error:", err);
+  return c.json({ error: err.message, stack: err.stack }, 500);
+});
 app.get("/health", (c) => c.json({ ok: true, service: "concierge-agent" }));
 app.route("/plan", planRoute);
 app.route("/webhook", webhookRoute);
