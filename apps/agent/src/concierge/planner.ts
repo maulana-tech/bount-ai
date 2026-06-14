@@ -1,4 +1,4 @@
-import { type Capability, type TaskPlan, CAPABILITIES } from "@concierge/shared";
+import { type Capability, type TaskPlan, CAPABILITIES } from "../shared.js";
 import { veniceChat } from "../integrations/venice.js";
 import { selectCapabilities } from "../capabilities.js";
 

@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@concierge/shared": "workspace:*",
     "@hono/node-server": "^1.13.7",
     "@metamask/delegation-toolkit": "^0.13.0",
     "hono": "^4.12.25",

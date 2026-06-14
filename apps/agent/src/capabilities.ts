@@ -1,4 +1,4 @@
-import { CAPABILITIES, type Capability } from "@concierge/shared";
+import { CAPABILITIES, type Capability } from "./shared.js";
 
 /**
  * Logika pemilihan kapabilitas. Data registry bawaan ada di `@concierge/shared`;

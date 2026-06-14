@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { Capability } from "@concierge/shared";
+import type { Capability } from "../shared.js";
 import { runSpike } from "../spike.js";
 import { getCapabilities } from "../integrations/oneshot.js";
 

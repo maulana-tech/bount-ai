@@ -5,7 +5,7 @@ import {
   type DelegationProof,
   type SpikeResult,
   CAPABILITIES,
-} from "@concierge/shared";
+} from "./shared.js";
 import { planRequest } from "./concierge/planner.js";
 import {
   buildSpendingDelegation,

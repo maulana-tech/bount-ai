@@ -1,4 +1,4 @@
-import type { PaymentStatus } from "@concierge/shared";
+import type { PaymentStatus } from "../shared.js";
 import { config } from "../config.js";
 
 /**
