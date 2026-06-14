@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { AgentOutput } from "@concierge/shared";
 import { CornerFrame } from "./CornerFrame";
 
@@ -18,27 +19,54 @@ export function ResultPanel({ outputs }: { outputs: AgentOutput[] }) {
 
   return (
     <CornerFrame label="Result">
-      <div className="space-y-4">
+      <div className="space-y-5">
         {outputs.map((o, i) => (
-          <div key={i}>
-            <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-              {o.label}
-            </div>
-            {o.type === "text" && o.text && (
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-muted">
-                {o.text.length > 500 ? o.text.slice(0, 500) + "…" : o.text}
-              </p>
-            )}
-            {o.type === "image" && o.imageUrl && (
-              <img
-                src={o.imageUrl}
-                alt={o.label}
-                className="w-full rounded border border-line"
-              />
-            )}
-          </div>
+          <OutputBlock key={i} output={o} />
         ))}
       </div>
     </CornerFrame>
+  );
+}
+
+function OutputBlock({ output }: { output: AgentOutput }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!output.text) return;
+    await navigator.clipboard.writeText(output.text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          {output.label}
+        </span>
+        {output.type === "text" && output.text && (
+          <button
+            onClick={handleCopy}
+            className="font-mono text-[10px] uppercase tracking-wide text-ink-faint transition-colors hover:text-ink-muted"
+          >
+            {copied ? "copied" : "copy"}
+          </button>
+        )}
+      </div>
+      {output.type === "text" && output.text && (
+        <div className="max-h-80 overflow-y-auto rounded border border-line bg-panel p-3">
+          <p className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-ink-muted">
+            {output.text}
+          </p>
+        </div>
+      )}
+      {output.type === "image" && output.imageUrl && (
+        <img
+          src={output.imageUrl}
+          alt={output.label}
+          className="w-full rounded border border-line"
+        />
+      )}
+    </div>
   );
 }
