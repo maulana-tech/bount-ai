@@ -39,12 +39,21 @@ export interface DelegationProof {
   capUsd: number;
 }
 
+export interface AgentOutput {
+  agent: string;
+  label: string;
+  type: "text" | "image";
+  text?: string;
+  imageUrl?: string;
+}
+
 export interface SpikeResult {
   request: string;
   budget: BudgetState;
   delegation: DelegationNode[];
   activity: ActivityEvent[];
   proofs: DelegationProof[];
+  outputs: AgentOutput[];
   settlement: "simulated" | "onchain";
   relayed: boolean;
 }
