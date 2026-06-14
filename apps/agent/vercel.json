@@ -1,3 +1,7 @@
 {
+  "functions": {
+    "api/index.ts": { "runtime": "nodejs@20.x" },
+    "api/test.ts": { "runtime": "nodejs@20.x" }
+  },
   "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }
