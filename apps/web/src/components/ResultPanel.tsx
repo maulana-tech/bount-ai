@@ -1,8 +1,10 @@
+"use client";
+
 import { useState } from "react";
 import type { AgentOutput } from "@concierge/shared";
 import { CornerFrame } from "./CornerFrame";
+import { MarkdownText } from "./MarkdownText";
 
-/** Hasil akhir: konten dari specialist agents. */
 export function ResultPanel({ outputs }: { outputs: AgentOutput[] }) {
   if (outputs.length === 0) {
     return (
@@ -54,10 +56,8 @@ function OutputBlock({ output }: { output: AgentOutput }) {
         )}
       </div>
       {output.type === "text" && output.text && (
-        <div className="max-h-80 overflow-y-auto rounded border border-line bg-panel p-3">
-          <p className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-ink-muted">
-            {output.text}
-          </p>
+        <div className="max-h-80 overflow-y-auto rounded border border-line bg-panel p-4">
+          <MarkdownText text={output.text} />
         </div>
       )}
       {output.type === "image" && output.imageUrl && (
