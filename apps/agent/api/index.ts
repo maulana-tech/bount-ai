@@ -1,7 +1,6 @@
-import app from "../src/app.js";
-
 export default async function handler(req: any, res: any) {
   try {
+    const { default: app } = await import("../src/app.js");
     const url = new URL(req.url || "/", `https://${req.headers.host || "localhost"}`);
     const headers = new Headers();
     for (const [k, v] of Object.entries(req.headers || {})) {
@@ -18,6 +17,6 @@ export default async function handler(req: any, res: any) {
   } catch (e: any) {
     res.statusCode = 500;
     res.setHeader("content-type", "text/plain");
-    res.end(`Error: ${e?.message || e}\n${e?.stack || ""}`);
+    res.end(`${e?.stack || e?.message || e}`);
   }
 }
