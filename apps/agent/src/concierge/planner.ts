@@ -13,7 +13,7 @@ export async function planRequest(
   request: string,
   pool: Capability[] = CAPABILITIES,
 ): Promise<TaskPlan> {
-  const caps = selectCapabilities(request, pool);
+  const caps = await selectCapabilities(request, pool);
 
   return {
     request,
