@@ -23,6 +23,12 @@ import type { SerializedDelegation } from "./grant";
  */
 export const FREE_CREDIT_USD = 5;
 
+/** statistik pemakaian per-agent (lokal/per-browser) — untuk ranking dashboard */
+export interface AgentUsage {
+  count: number;
+  earned: number;
+}
+
 interface BudgetState {
   cap: number;
   spent: number;
@@ -32,6 +38,8 @@ interface BudgetState {
   rootDelegation: SerializedDelegation | null;
   delegation: DelegationNode[] | null;
   activity: ActivityEvent[];
+  /** berapa kali tiap agent dipakai + total dibayar ke agent itu */
+  usage: Record<string, AgentUsage>;
 }
 
 interface BudgetCtx extends BudgetState {
@@ -49,6 +57,7 @@ const DEFAULT: BudgetState = {
   rootDelegation: null,
   delegation: null,
   activity: [],
+  usage: {},
 };
 
 const Ctx = createContext<BudgetCtx | null>(null);
@@ -77,15 +86,26 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
 
   const applySpike = useCallback((r: SpikeResult) => {
     const stamp = Date.now();
-    setState((s) => ({
-      ...s,
-      spent: Number((s.spent + r.budget.spent).toFixed(6)),
-      delegation: r.delegation,
-      activity: [
-        ...r.activity.map((e, i) => ({ ...e, id: `${e.id}-${stamp}-${i}` })),
-        ...s.activity,
-      ].slice(0, 20),
-    }));
+    setState((s) => {
+      const usage = { ...s.usage };
+      for (const e of r.activity) {
+        const u = usage[e.agent] ?? { count: 0, earned: 0 };
+        usage[e.agent] = {
+          count: u.count + 1,
+          earned: Number((u.earned + e.amount).toFixed(6)),
+        };
+      }
+      return {
+        ...s,
+        spent: Number((s.spent + r.budget.spent).toFixed(6)),
+        delegation: r.delegation,
+        activity: [
+          ...r.activity.map((e, i) => ({ ...e, id: `${e.id}-${stamp}-${i}` })),
+          ...s.activity,
+        ].slice(0, 20),
+        usage,
+      };
+    });
   }, []);
 
   const grant = useCallback(
