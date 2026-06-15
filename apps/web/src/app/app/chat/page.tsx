@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { CornerFrame } from "@/components/CornerFrame";
 import { MarkdownText } from "@/components/MarkdownText";
+import { BudgetMeter } from "@/components/BudgetMeter";
 import { runSpike } from "@/lib/agent";
 import { getCustomAgents } from "@/lib/customAgents";
+import { useBudget } from "@/lib/budget";
 import type { AgentOutput } from "@concierge/shared";
 
 interface Message {
@@ -29,6 +31,7 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const budget = useBudget();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -57,7 +60,12 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const result = await runSpike(msg, getCustomAgents());
+      const grant =
+        budget.granted && budget.rootDelegation
+          ? { rootDelegation: budget.rootDelegation, cap: budget.cap }
+          : undefined;
+      const result = await runSpike(msg, getCustomAgents(), grant);
+      budget.applySpike(result);
       const combined =
         result.outputs?.map((o) => o.text ?? "").filter(Boolean).join("\n\n") ?? "";
       const assistantMsg: Message = {
@@ -260,8 +268,13 @@ export default function ChatPage() {
         </CornerFrame>
         </div>
 
-        {/* right — generated output + history */}
+        {/* right — budget + generated output + history */}
         <aside className="hidden min-h-0 flex-col gap-4 overflow-y-auto pt-3 xl:flex">
+          <BudgetMeter
+            spent={budget.spent}
+            cap={budget.cap}
+            onRevoke={budget.revoke}
+          />
           <OutputPanel images={generatedImages} />
           <HistoryPanel
             messages={messages}
