@@ -7,14 +7,17 @@ import {
   type SpikeResult,
   CAPABILITIES,
 } from "./shared.js";
+import type { Delegation } from "@metamask/delegation-toolkit";
 import { planRequest } from "./concierge/planner.js";
 import {
+  agentParty,
   buildSpendingDelegation,
   delegationHash,
   newParty,
   toUsdc,
 } from "./integrations/delegation.js";
 import { paidFetch } from "./integrations/x402.js";
+import { settleOnchain } from "./integrations/settlement.js";
 import { SELLER } from "./routes/seller.js";
 import { config } from "./config.js";
 import { runResearch } from "./agents/research.js";
@@ -32,6 +35,7 @@ import { runText } from "./agents/text.js";
 export async function runSpike(
   request: string,
   extraAgents: Capability[] = [],
+  grant?: { root: Delegation; capUsd: number },
 ): Promise<SpikeResult> {
   // Gabung katalog bawaan + agent custom user (custom tidak menimpa bawaan).
   const seen = new Set(CAPABILITIES.map((c) => c.id));
@@ -43,17 +47,21 @@ export async function runSpike(
   const plan = await planRequest(request, pool);
   const sellerBase = config.agentUrl;
 
-  const user = newParty();
-  const agent = newParty();
-  const cap = plan.subtasks.reduce((sum, t) => sum + t.estimatedCost, 0);
+  // Grant nyata (root ditandatangani wallet user) → delegate pakai key STABIL
+  // agar `to` di root cocok. Tanpa grant → root di-generate server (demo).
+  const agent = grant ? agentParty() : newParty();
+  const planCost = plan.subtasks.reduce((sum, t) => sum + t.estimatedCost, 0);
+  const cap = grant ? grant.capUsd : planCost;
 
   // 1) Delegasi root: user → ven-AI (plafon penuh, whitelist seller).
-  const root = await buildSpendingDelegation({
-    from: user,
-    to: agent.address,
-    capUsdc: toUsdc(cap),
-    allowedTargets: [SELLER],
-  });
+  const root =
+    grant?.root ??
+    (await buildSpendingDelegation({
+      from: newParty(),
+      to: agent.address,
+      capUsdc: toUsdc(cap),
+      allowedTargets: [SELLER],
+    }));
 
   const proofs: DelegationProof[] = [
     { from: "user", to: "ven-AI", hash: delegationHash(root), capUsd: cap },
@@ -67,6 +75,7 @@ export async function runSpike(
 
   let spent = 0;
   let at = 0;
+  let anyOnchain = false;
 
   for (const t of plan.subtasks) {
     const capability = byId[t.agent];
@@ -107,13 +116,27 @@ export async function runSpike(
     );
     spent += res.paid;
     at += 1;
+
+    // Settlement on-chain (gated). Sukses → txHash nyata + tandai onchain;
+    // null (OFF/gagal) → pakai txHash simulasi dari x402. Demo tak putus.
+    let txHash = res.txHash;
+    const settled = await settleOnchain({
+      permissionContext: [child, root],
+      payTo: SELLER,
+      amountUsdc: toUsdc(res.paid),
+    });
+    if (settled) {
+      txHash = settled.txHash;
+      anyOnchain = true;
+    }
+
     activity.push({
       id: `a${at}`,
       agent: t.agent,
       action: t.description,
       amount: res.paid,
       status: "confirmed",
-      txHash: res.txHash,
+      txHash,
       at,
     });
     const node = nodes.find((n) => n.id === t.agent);
@@ -147,7 +170,7 @@ export async function runSpike(
     activity,
     proofs,
     outputs,
-    settlement: "simulated",
+    settlement: anyOnchain ? "onchain" : "simulated",
     relayed: false,
   };
 }
