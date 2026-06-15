@@ -2,25 +2,32 @@ import {
   createPublicClient,
   createWalletClient,
   http,
+  parseAbi,
   type Address,
   type Hex,
-  type PublicClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import type { Delegation } from "@metamask/delegation-toolkit";
+import { baseSepolia } from "viem/chains";
 import { config } from "../config.js";
 
 /**
- * Settlement on-chain (gated) — pasangan dari x402 simulasi. Arsitektur
- * dual-mode: default OFF (return null → caller fallback ke simulasi). ON saat
- * env lengkap; lalu MENCOBA `redeemDelegations` nyata, dan APA PUN errornya
- * tetap fallback ke simulasi supaya demo tak pernah putus.
+ * Settlement on-chain (gated) — pasangan nyata dari x402. Default OFF (return
+ * null → caller fallback ke simulasi). ON saat env lengkap; lalu delegate yang
+ * didanai melakukan transfer USDC SUNGGUHAN ke `payTo` di Base Sepolia dan
+ * mengembalikan tx hash asli. Jumlah sudah dibatasi cap hasil redelegasi
+ * (di-enforce di loop x402). Apa pun errornya → fallback ke simulasi, jadi
+ * demo tak pernah putus.
  *
- * ⚠️ Status: SEAM siap (gating + client + saldo + fallback teruji). Panggilan
- * `redeemDelegations` sengaja belum diaktifkan — butuh (a) delegator berupa
- * MetaMask Smart Account (bukan EOA) dan (b) caveat konsisten-redemption
- * (allowedTargets = token USDC, bukan seller). Lihat PROJECT.md / catatan grant.
+ * Catatan: ini transfer USDC langsung oleh delegate (cara x402 men-settle).
+ * Versi penuh `redeemDelegations` (eksekusi dari Smart Account delegator)
+ * butuh deploy SA + bundler — langkah berikutnya; di sini otoritas/budget
+ * tetap diatur oleh delegasi off-chain + cap enforcement.
  */
+
+const ERC20_ABI = parseAbi([
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function balanceOf(address owner) view returns (uint256)",
+]);
 
 export function onchainSettlementEnabled(): boolean {
   const s = config.settlement;
@@ -28,58 +35,67 @@ export function onchainSettlementEnabled(): boolean {
 }
 
 export interface SettleParams {
-  /** Rantai delegasi penuh [child, …, root] sebagai permission context. */
-  permissionContext: Delegation[];
-  /** Penerima pembayaran (seller). */
+  /** penerima pembayaran (seller / payTo dari x402) */
   payTo: Address;
-  /** Jumlah dalam unit USDC (6 desimal). */
+  /** jumlah dalam unit USDC (6 desimal) */
   amountUsdc: bigint;
 }
 
-let cachedPublic: PublicClient | null = null;
-function publicClient(): PublicClient {
-  if (!cachedPublic) {
-    cachedPublic = createPublicClient({
-      transport: http(config.settlement.rpcUrl),
-    });
-  }
-  return cachedPublic;
-}
-
-/**
- * Coba settle on-chain. Return `{ txHash }` bila sukses, atau `null` agar caller
- * jatuh ke simulasi. Tidak pernah throw ke caller.
- */
 export async function settleOnchain(
   params: SettleParams,
 ): Promise<{ txHash: Hex } | null> {
   if (!onchainSettlementEnabled()) return null;
 
+  // On-chain settlement saat ini hanya untuk Base Sepolia.
+  if (config.chain.id !== baseSepolia.id) {
+    console.warn(
+      `[settlement] on-chain only supports Base Sepolia (got chain ${config.chain.id}) — simulated`,
+    );
+    return null;
+  }
+
   try {
     const account = privateKeyToAccount(config.settlement.privateKey as Hex);
-    const wallet = createWalletClient({
+    const transport = http(config.settlement.rpcUrl);
+    const publicClient = createPublicClient({ chain: baseSepolia, transport });
+    const walletClient = createWalletClient({
       account,
-      transport: http(config.settlement.rpcUrl),
+      chain: baseSepolia,
+      transport,
     });
-    const pub = publicClient();
 
-    // Guard saldo gas — tanpa ETH, redeem pasti gagal: fallback lebih awal.
-    const balance = await pub.getBalance({ address: account.address });
-    if (balance === 0n) {
+    const [gas, usdc] = await Promise.all([
+      publicClient.getBalance({ address: account.address }),
+      publicClient.readContract({
+        address: config.usdc,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [account.address],
+      }),
+    ]);
+
+    if (gas === 0n) {
       console.warn(
-        `[settlement] delegate ${account.address} has 0 gas — falling back to simulated`,
+        `[settlement] payer ${account.address} has 0 gas — simulated`,
+      );
+      return null;
+    }
+    if (usdc < params.amountUsdc) {
+      console.warn(
+        `[settlement] payer ${account.address} USDC ${usdc} < needed ${params.amountUsdc} — simulated`,
       );
       return null;
     }
 
-    // --- SEAM: redeem nyata diisi di Stage 3 (butuh smart-account delegator
-    // + caveat redemption-konsisten + dana testnet). Sampai itu, fallback. ---
-    void wallet;
-    void params;
-    console.warn(
-      "[settlement] on-chain enabled but redeem not yet wired — falling back to simulated",
-    );
-    return null;
+    const txHash = await walletClient.writeContract({
+      address: config.usdc,
+      abi: ERC20_ABI,
+      functionName: "transfer",
+      args: [params.payTo, params.amountUsdc],
+    });
+    await publicClient.waitForTransactionReceipt({ hash: txHash });
+    console.log(`[settlement] on-chain USDC transfer settled: ${txHash}`);
+    return { txHash };
   } catch (err) {
     console.error("[settlement] on-chain attempt failed, falling back:", err);
     return null;
