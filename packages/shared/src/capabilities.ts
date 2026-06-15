@@ -17,6 +17,8 @@ export interface Capability {
   unitCostUsd: number;
   /** produk yang dibeli dari seller x402 */
   product: string;
+  /** wallet pembuat (agent custom) — pembayaran x402 mengalir ke sini */
+  creator?: string;
 }
 
 export const CAPABILITIES: Capability[] = [
