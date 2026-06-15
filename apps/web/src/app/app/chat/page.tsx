@@ -38,6 +38,14 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // auto-grow the textarea to fit its content (capped by max-h in CSS)
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
+
   async function handleSend(text?: string) {
     const msg = (text ?? input).trim();
     if (!msg || loading) return;
@@ -73,11 +81,15 @@ export default function ChatPage() {
   }
 
   return (
-    <>
+    <div className="flex h-[100dvh] flex-col">
       <Navbar variant="app" />
-      <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6">
-        <CornerFrame label="Chat" className="flex flex-1 flex-col">
-          <div className="flex flex-1 flex-col">
+      <main className="mx-auto flex w-full min-h-0 max-w-3xl flex-1 flex-col px-4 py-6">
+        <CornerFrame
+          label="Chat"
+          className="flex min-h-0 flex-1 flex-col"
+          bodyClassName="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="flex min-h-0 flex-1 flex-col">
             {/* header */}
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
@@ -98,7 +110,7 @@ export default function ChatPage() {
             </div>
 
             {/* messages */}
-            <div className="flex-1 space-y-4 overflow-y-auto py-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
               {messages.length === 0 && !error && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <p className="mb-6 text-xs text-ink-faint">
@@ -189,7 +201,7 @@ export default function ChatPage() {
             <div className="border-t border-line pt-4">
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                className="flex items-end gap-3"
+                className="flex items-end gap-2 rounded-lg border border-line bg-panel p-2 transition-colors focus-within:border-gold/50"
               >
                 <textarea
                   ref={inputRef}
@@ -204,23 +216,23 @@ export default function ChatPage() {
                   }}
                   rows={1}
                   placeholder="ask the agent anything…"
-                  className="max-h-32 min-h-[40px] flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-ink-faint disabled:opacity-50"
+                  className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-sm leading-relaxed outline-none placeholder:text-ink-faint disabled:opacity-50"
                 />
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
-                  className="shrink-0 rounded bg-gold px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gold-hover disabled:opacity-50"
+                  className="h-11 shrink-0 rounded-md bg-gold px-5 text-sm font-medium text-white transition-colors hover:bg-gold-hover disabled:opacity-50"
                 >
                   Send
                 </button>
               </form>
-              <p className="mt-1 font-mono text-[10px] text-ink-faint">
+              <p className="mt-2 px-1 font-mono text-[10px] text-ink-faint">
                 Enter to send · Shift+Enter for new line
               </p>
             </div>
           </div>
         </CornerFrame>
       </main>
-    </>
+    </div>
   );
 }
