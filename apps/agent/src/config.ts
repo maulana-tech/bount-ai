@@ -17,6 +17,18 @@ export const config = {
   usdc: (process.env.USDC_ADDRESS ??
     "0x036CbD53842c5426634e7929541eC2318f3dCF7e") as `0x${string}`,
 
+  /**
+   * Settlement on-chain (gated). Default OFF → pembayaran x402 disimulasi.
+   * Aktif bila `ENABLE_ONCHAIN_SETTLEMENT=1` + ada `SETTLEMENT_PRIVATE_KEY`
+   * (delegate yang punya gas) + `RPC_URL`. Bila aktif, agent mencoba redeem
+   * delegasi on-chain; gagal/belum siap → fallback ke simulasi (demo tak putus).
+   */
+  settlement: {
+    enabled: process.env.ENABLE_ONCHAIN_SETTLEMENT === "1",
+    privateKey: (process.env.SETTLEMENT_PRIVATE_KEY ?? "") as `0x${string}` | "",
+    rpcUrl: process.env.RPC_URL ?? "",
+  },
+
   venice: {
     apiKey: process.env.VENICE_API_KEY ?? "",
     baseUrl: process.env.VENICE_BASE_URL ?? "https://api.venice.ai/api/v1",
