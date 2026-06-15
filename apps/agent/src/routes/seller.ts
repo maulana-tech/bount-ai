@@ -26,6 +26,9 @@ export const sellerRoute = new Hono().get("/buy", (c) => {
   // `amount` (USDC units) override harga — dipakai agar agent custom membayar
   // tarif yang dideklarasikannya. Fallback ke harga produk bawaan.
   const max = c.req.query("amount") ?? PRICES[product] ?? "1000000";
+  // `payTo` override penerima — agent custom membayar wallet pembuatnya.
+  const payToParam = c.req.query("payTo");
+  const payTo = /^0x[0-9a-fA-F]{40}$/.test(payToParam ?? "") ? payToParam! : SELLER;
   const payment = c.req.header("x-payment");
 
   if (!payment) {
@@ -38,7 +41,7 @@ export const sellerRoute = new Hono().get("/buy", (c) => {
             network: config.chain.name,
             maxAmountRequired: max,
             asset: config.usdc,
-            payTo: SELLER,
+            payTo,
             resource: `/seller/buy?product=${product}`,
             description: `${product} service`,
           },
