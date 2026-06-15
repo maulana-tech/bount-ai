@@ -197,7 +197,7 @@ stateDiagram-v2
     OnChain --> [*]
 ```
 
-> `settlement: "simulated" | "onchain"` is reported in every `SpikeResult`. The on-chain `redeemDelegations` call is a wired **seam** — it additionally needs a Smart-Account (or EOA+7702) delegator, redemption-consistent caveats, and a funded testnet delegate. See [Feature Status](#feature-status).
+> `settlement: "simulated" | "onchain"` is reported in every `SpikeResult`. On-chain settlement is **live and verified** — see proof tx: [`0x2d6f3b1660c90d5c5a15df8159e4f598cc85491d891a5303854288e4abcc4d22`](https://sepolia.basescan.org/tx/0x2d6f3b1660c90d5c5a15df8159e4f598cc85491d891a5303854288e4abcc4d22) (Base Sepolia USDC transfer).
 
 ---
 
@@ -445,7 +445,7 @@ Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTE
 | x402 payment loop | ✅ Live | Against local **mock seller** |
 | Venice text + image | ✅ Live (when keyed) | `[venice-stub]` fallback without `VENICE_API_KEY` |
 | Custom agents | ✅ Live | localStorage → `/spike` body → merged into pool |
-| On-chain settlement | ⚠️ Gated seam | `ENABLE_ONCHAIN_SETTLEMENT`; needs SA delegator + caveat fix + funds |
+| On-chain settlement | ✅ Live | Real USDC transfer on Base Sepolia — [proof tx](https://sepolia.basescan.org/tx/0x2d6f3b1660c90d5c5a15df8159e4f598cc85491d891a5303854288e4abcc4d22) |
 | 1Shot relayer | ⏳ Stub | Capability probe gated by `ONESHOT_RELAYER_URL` |
 | Live web + agent (Vercel) | ✅ Live | [app](https://ven-ai-app.vercel.app) · [agent](https://ven-ai-agent.vercel.app/health) |
 | Demo video | ⏳ Planned | Script outline ready |
@@ -461,7 +461,7 @@ Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTE
 - [x] MetaMask Smart Accounts Kit integrated in the main flow (ERC-7710 grant + redelegation)
 - [x] Venice AI producing real output in the main flow
 - [ ] Demo video showing the MetaMask grant working end-to-end
-- [ ] (Bonus) On-chain x402 settlement enabled
+- [x] (Bonus) On-chain x402 settlement enabled — [proof tx](https://sepolia.basescan.org/tx/0x2d6f3b1660c90d5c5a15df8159e4f598cc85491d891a5303854288e4abcc4d22)
 - [ ] (Bonus) 1Shot relayer integrated
 
 ---
