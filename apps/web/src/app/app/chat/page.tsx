@@ -316,6 +316,16 @@ function ImageCard({ src, caption }: { src: string; caption: string }) {
     }
   }
 
+  function shareOnX() {
+    const url =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://ven-ai-app.vercel.app";
+    const text = `Made with ven-AI — "${caption.slice(0, 120)}". Give an AI a budget, not your wallet: ERC-7710 delegation + x402 + Venice AI.`;
+    const intent = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(intent, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <figure className="mt-3 overflow-hidden rounded border border-line bg-panel">
       <img src={src} alt={caption} className="block w-full" />
@@ -330,6 +340,12 @@ function ImageCard({ src, caption }: { src: string; caption: string }) {
             className="rounded border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-ink-muted transition-colors hover:border-gold/50 hover:text-ink disabled:opacity-50"
           >
             Share
+          </button>
+          <button
+            onClick={shareOnX}
+            className="rounded border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-ink-muted transition-colors hover:border-gold/50 hover:text-ink"
+          >
+            Post on X
           </button>
           <a
             href={src}
