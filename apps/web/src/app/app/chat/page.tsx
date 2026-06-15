@@ -68,9 +68,14 @@ export default function ChatPage() {
       budget.applySpike(result);
       const combined =
         result.outputs?.map((o) => o.text ?? "").filter(Boolean).join("\n\n") ?? "";
+      const hasImage = result.outputs?.some(
+        (o) => o.type === "image" && o.imageUrl,
+      );
+      // Don't print "no output" when the result is image-only — show the image.
+      const text = combined || (hasImage ? "" : "No text output for this request.");
       const assistantMsg: Message = {
         role: "assistant",
-        text: combined || "no output",
+        text,
         outputs: result.outputs,
         ts: Date.now(),
       };
