@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { CornerFrame } from "@/components/CornerFrame";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { BudgetMeter } from "@/components/BudgetMeter";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -15,12 +15,26 @@ const GrantBudgetModal = dynamic(
   { ssr: false },
 );
 import { useBudget } from "@/lib/budget";
-import { CAPABILITIES } from "@concierge/shared";
+import { getCustomAgents } from "@/lib/customAgents";
+import { CAPABILITIES, type Capability } from "@concierge/shared";
 import { usd } from "@/lib/utils";
 
 export default function Page() {
-  const { cap, spent, activity, revoke, granted } = useBudget();
+  const { cap, spent, activity, revoke, granted, usage } = useBudget();
   const [grantOpen, setGrantOpen] = useState(false);
+  const [custom, setCustom] = useState<Capability[]>([]);
+  useEffect(() => setCustom(getCustomAgents()), []);
+
+  // Gabung bawaan + custom, urutkan: paling sering dipakai dulu, lalu earnings.
+  const ranked = useMemo(() => {
+    const pool = [...CAPABILITIES, ...custom];
+    return pool
+      .map((c) => ({ c, u: usage[c.id] ?? { count: 0, earned: 0 } }))
+      .sort(
+        (a, b) => b.u.count - a.u.count || b.u.earned - a.u.earned,
+      );
+  }, [custom, usage]);
+
   // Tampilkan aktivitas nyata; jatuh ke contoh statis saat belum ada run.
   const feed = activity.length > 0 ? activity : MOCK_FEED;
 
@@ -107,37 +121,57 @@ export default function Page() {
           </CornerFrame>
         </div>
 
-        {/* agent capabilities grid */}
+        {/* agent capabilities — ranked by usage (most used first) */}
         <div className="mb-8">
-          <CornerFrame label="Capabilities">
+          <CornerFrame label="Top agents">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {CAPABILITIES.map((c) => (
-                <Link
-                  key={c.id}
-                  href="/app/chat"
-                  className="group border border-line bg-panel p-4 transition-colors hover:border-line-strong"
-                >
-                  <div className="mb-1 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold tracking-tight">{c.label}</h3>
-                    <span className="font-mono text-xs tnum text-gold">
-                      ${usd(c.unitCostUsd)}
-                    </span>
-                  </div>
-                  <p className="text-xs leading-relaxed text-ink-muted">
-                    {c.description}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {c.keywords.slice(0, 3).map((k) => (
-                      <span
-                        key={k}
-                        className="rounded bg-line/30 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint"
-                      >
-                        {k}
+              {ranked.map(({ c, u }, i) => {
+                const isCustom = !CAPABILITIES.some((b) => b.id === c.id);
+                return (
+                  <Link
+                    key={c.id}
+                    href="/app/chat"
+                    className="group relative border border-line bg-panel p-4 transition-colors hover:border-line-strong"
+                  >
+                    {i === 0 && u.count > 0 && (
+                      <span className="absolute -top-2 right-3 border border-gold/40 bg-paper px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-gold">
+                        top
                       </span>
-                    ))}
-                  </div>
-                </Link>
-              ))}
+                    )}
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-sm font-semibold tracking-tight">{c.label}</h3>
+                        {isCustom && (
+                          <span className="border border-gold/40 bg-gold-tint px-1 py-0.5 font-mono text-[9px] uppercase tracking-wide text-gold">
+                            custom
+                          </span>
+                        )}
+                      </div>
+                      <span className="shrink-0 font-mono text-xs tnum text-gold">
+                        ${usd(c.unitCostUsd)}
+                      </span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-ink-muted">
+                      {c.description}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex flex-wrap gap-1">
+                        {c.keywords.slice(0, 3).map((k) => (
+                          <span
+                            key={k}
+                            className="rounded bg-line/30 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint"
+                          >
+                            {k}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="shrink-0 font-mono text-[10px] tnum text-ink-faint">
+                        {u.count > 0 ? `used ${u.count}× · $${usd(u.earned)}` : "unused"}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </CornerFrame>
         </div>
