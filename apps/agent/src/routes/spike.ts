@@ -29,6 +29,8 @@ function sanitizeAgents(raw: unknown): Capability[] {
     const label = String(o.label ?? "").trim().slice(0, 48);
     if (!id || !label) return [];
     const cost = Number(o.unitCostUsd);
+    const creator = String(o.creator ?? "");
+    const validCreator = /^0x[0-9a-fA-F]{40}$/.test(creator);
     return [
       {
         id,
@@ -41,6 +43,7 @@ function sanitizeAgents(raw: unknown): Capability[] {
           ? Math.min(Math.max(cost, 0.1), 100)
           : 1,
         product: String(o.product ?? "custom").slice(0, 32),
+        ...(validCreator ? { creator } : {}),
       },
     ];
   });
