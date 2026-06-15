@@ -80,10 +80,36 @@ export default function ChatPage() {
     if (lastUser) handleSend(lastUser.text);
   }
 
+  // gather generated images across the conversation for the output panel
+  const generatedImages = messages
+    .flatMap((m) => m.outputs ?? [])
+    .filter((o) => o.type === "image" && o.imageUrl);
+
   return (
     <div className="flex h-[100dvh] flex-col">
       <Navbar variant="app" />
-      <main className="mx-auto flex w-full min-h-0 max-w-3xl flex-1 flex-col px-4 py-6">
+      <main className="mx-auto grid w-full min-h-0 max-w-7xl flex-1 grid-cols-1 gap-4 px-4 py-6 xl:grid-cols-[14rem_minmax(0,1fr)_18rem]">
+        {/* left — preview videos */}
+        <aside className="hidden min-h-0 flex-col gap-4 overflow-y-auto pt-3 xl:flex">
+          <PreviewVideo
+            title="Agents"
+            desc="Specialist capabilities the AI can delegate to."
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260429_115139_0fc6bd3d-3631-4d26-ab9b-28293887dcc9.mp4"
+          />
+          <PreviewVideo
+            title="Delegation"
+            desc="On-chain budget delegation via ERC-7710 + x402."
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4"
+          />
+          <PreviewVideo
+            title="Chat"
+            desc="Real AI responses with markdown and image support."
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_171521_25968ba2-b594-4b32-aab7-f6b69398a6fa.mp4"
+          />
+        </aside>
+
+        {/* center — chat */}
+        <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-col">
         <CornerFrame
           label="Chat"
           className="flex min-h-0 flex-1 flex-col"
@@ -232,7 +258,113 @@ export default function ChatPage() {
             </div>
           </div>
         </CornerFrame>
+        </div>
+
+        {/* right — generated output + history */}
+        <aside className="hidden min-h-0 flex-col gap-4 overflow-y-auto pt-3 xl:flex">
+          <OutputPanel images={generatedImages} />
+          <HistoryPanel
+            messages={messages}
+            onPick={(t) => handleSend(t)}
+            loading={loading}
+          />
+        </aside>
       </main>
     </div>
+  );
+}
+
+function PreviewVideo({
+  title,
+  desc,
+  src,
+}: {
+  title: string;
+  desc: string;
+  src: string;
+}) {
+  return (
+    <div className="flex flex-col border border-line bg-panel">
+      <div className="relative border-b border-line bg-panel-2/50">
+        <div className="aspect-[16/9] animate-pulse bg-line/30" />
+        <video
+          src={src}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      </div>
+      <div className="p-3">
+        <h3 className="text-xs font-semibold tracking-tight">{title}</h3>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function OutputPanel({ images }: { images: AgentOutput[] }) {
+  return (
+    <CornerFrame label="Output">
+      {images.length === 0 ? (
+        <p className="py-6 text-center text-[11px] leading-relaxed text-ink-faint">
+          Generated images appear here.
+        </p>
+      ) : (
+        <div className="grid gap-2">
+          {images.map((o, i) => (
+            <a
+              key={i}
+              href={o.imageUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="group block overflow-hidden rounded border border-line"
+            >
+              <img
+                src={o.imageUrl}
+                alt={o.label}
+                className="w-full object-cover transition-transform group-hover:scale-[1.02]"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+    </CornerFrame>
+  );
+}
+
+function HistoryPanel({
+  messages,
+  onPick,
+  loading,
+}: {
+  messages: Message[];
+  onPick: (text: string) => void;
+  loading: boolean;
+}) {
+  const prompts = messages.filter((m) => m.role === "user");
+  if (prompts.length === 0) return null;
+  return (
+    <CornerFrame label="History">
+      <ul className="space-y-1.5">
+        {prompts
+          .slice()
+          .reverse()
+          .map((m, i) => (
+            <li key={i}>
+              <button
+                onClick={() => onPick(m.text)}
+                disabled={loading}
+                title={m.text}
+                className="block w-full truncate text-left font-mono text-[11px] text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+              >
+                {m.text}
+              </button>
+            </li>
+          ))}
+      </ul>
+    </CornerFrame>
   );
 }
