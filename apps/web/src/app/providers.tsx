@@ -5,6 +5,7 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
 import { wagmiConfig } from "@/lib/wagmi";
+import { BudgetProvider } from "@/lib/budget";
 
 import "@rainbow-me/rainbowkit/styles.css";
 
@@ -25,7 +26,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={rkTheme}>{children}</RainbowKitProvider>
+        <RainbowKitProvider theme={rkTheme}>
+          <BudgetProvider>{children}</BudgetProvider>
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
