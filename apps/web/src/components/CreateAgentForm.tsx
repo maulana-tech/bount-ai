@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import type { Capability } from "@concierge/shared";
 import { CornerFrame } from "./CornerFrame";
 import { addCustomAgent, makeAgentId } from "@/lib/customAgents";
@@ -17,10 +18,11 @@ export function CreateAgentForm({
   onCreated: (list: Capability[]) => void;
   onCancel: () => void;
 }) {
+  const { address } = useAccount();
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState("");
-  const [cost, setCost] = useState("2");
+  const [cost, setCost] = useState("0.5");
   const [product, setProduct] = useState("dataset");
 
   function submit(e: React.FormEvent) {
@@ -36,6 +38,7 @@ export function CreateAgentForm({
         .filter(Boolean),
       unitCostUsd: Math.min(Math.max(Number(cost) || 1, 0.1), 100),
       product: product.trim() || "custom",
+      ...(address ? { creator: address } : {}),
     };
     onCreated(addCustomAgent(agent));
   }
@@ -93,6 +96,19 @@ export function CreateAgentForm({
           </Field>
         </div>
 
+        <p className="font-mono text-[11px] text-ink-faint">
+          {address ? (
+            <>
+              earnings go to{" "}
+              <span className="text-ink-muted">
+                {address.slice(0, 6)}…{address.slice(-4)}
+              </span>{" "}
+              — others pay this wallet when they use your agent
+            </>
+          ) : (
+            "connect a wallet to earn when others use this agent (optional)"
+          )}
+        </p>
         <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
