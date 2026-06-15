@@ -92,6 +92,16 @@ export function AgentCard({
             </span>
             <p className="font-mono text-sm tnum text-gold">${usd(agent.unitCostUsd)}</p>
           </div>
+          {agent.creator && (
+            <div className="space-y-1">
+              <span className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">
+                creator — earns on each use
+              </span>
+              <p className="font-mono text-sm text-ink-muted">
+                {agent.creator.slice(0, 10)}…{agent.creator.slice(-6)}
+              </p>
+            </div>
+          )}
         </div>
       </Modal>
     </>
