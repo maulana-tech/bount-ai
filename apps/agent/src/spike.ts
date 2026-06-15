@@ -121,7 +121,6 @@ export async function runSpike(
     // null (OFF/gagal) → pakai txHash simulasi dari x402. Demo tak putus.
     let txHash = res.txHash;
     const settled = await settleOnchain({
-      permissionContext: [child, root],
       payTo: SELLER,
       amountUsdc: toUsdc(res.paid),
     });
