@@ -14,6 +14,8 @@ interface Message {
   role: "user" | "assistant";
   text: string;
   outputs?: AgentOutput[];
+  /** the request that produced this message — used as image caption */
+  prompt?: string;
   ts: number;
 }
 
@@ -77,6 +79,7 @@ export default function ChatPage() {
         role: "assistant",
         text,
         outputs: result.outputs,
+        prompt: msg,
         ts: Date.now(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
@@ -189,18 +192,15 @@ export default function ChatPage() {
                       <p className="text-sm leading-relaxed text-ink">{m.text}</p>
                     ) : (
                       <div className="text-sm leading-relaxed text-ink-muted">
-                        <MarkdownText text={m.text} />
-                        {m.outputs?.map(
-                          (o) =>
-                            o.type === "image" &&
-                            o.imageUrl && (
-                              <img
-                                key={o.label}
-                                src={o.imageUrl}
-                                alt={o.label}
-                                className="mt-3 w-full rounded border border-line"
-                              />
-                            ),
+                        {m.text && <MarkdownText text={m.text} />}
+                        {m.outputs?.map((o, oi) =>
+                          o.type === "image" && o.imageUrl ? (
+                            <ImageCard
+                              key={oi}
+                              src={o.imageUrl}
+                              caption={m.prompt ?? o.label}
+                            />
+                          ) : null,
                         )}
                       </div>
                     )}
@@ -289,6 +289,58 @@ export default function ChatPage() {
         </aside>
       </main>
     </div>
+  );
+}
+
+function ImageCard({ src, caption }: { src: string; caption: string }) {
+  const [busy, setBusy] = useState(false);
+  const filename = `ven-ai-${caption.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "image"}.webp`;
+
+  async function share() {
+    setBusy(true);
+    try {
+      const blob = await (await fetch(src)).blob();
+      const file = new File([blob], filename, { type: blob.type || "image/webp" });
+      const nav = navigator as Navigator & {
+        canShare?: (d: ShareData) => boolean;
+      };
+      if (nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file], title: "ven-AI", text: caption });
+      } else {
+        window.open(src, "_blank");
+      }
+    } catch {
+      window.open(src, "_blank");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <figure className="mt-3 overflow-hidden rounded border border-line bg-panel">
+      <img src={src} alt={caption} className="block w-full" />
+      <figcaption className="flex items-center justify-between gap-2 border-t border-line bg-panel-2/40 px-3 py-2">
+        <span className="truncate text-[11px] italic text-ink-muted" title={caption}>
+          {caption}
+        </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={share}
+            disabled={busy}
+            className="rounded border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-ink-muted transition-colors hover:border-gold/50 hover:text-ink disabled:opacity-50"
+          >
+            Share
+          </button>
+          <a
+            href={src}
+            download={filename}
+            className="rounded border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-ink-muted transition-colors hover:border-gold/50 hover:text-ink"
+          >
+            Download
+          </a>
+        </div>
+      </figcaption>
+    </figure>
   );
 }
 
