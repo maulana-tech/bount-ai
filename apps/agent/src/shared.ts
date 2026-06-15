@@ -76,6 +76,8 @@ export interface Capability {
   keywords: string[];
   unitCostUsd: number;
   product: string;
+  /** wallet pembuat (agent custom) — pembayaran x402 mengalir ke sini */
+  creator?: string;
 }
 
 export const CAPABILITIES: Capability[] = [
