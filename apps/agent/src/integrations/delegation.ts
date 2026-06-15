@@ -31,6 +31,43 @@ export function newParty(): Party {
   return { privateKey, address: privateKeyToAccount(privateKey).address };
 }
 
+/**
+ * Party delegate ven-AI yang STABIL — alamatnya di-expose ke client lewat
+ * `GET /spike/agent` agar user bisa menandatangani root delegation yang
+ * mendelegasikan ke alamat ini. Persisten via `AGENT_DELEGATE_PRIVATE_KEY`;
+ * tanpa env, di-generate sekali per proses (cukup untuk demo).
+ */
+let cachedAgent: Party | null = null;
+export function agentParty(): Party {
+  if (cachedAgent) return cachedAgent;
+  const env = process.env.AGENT_DELEGATE_PRIVATE_KEY;
+  if (env && /^0x[0-9a-fA-F]{64}$/.test(env)) {
+    cachedAgent = { privateKey: env as Hex, address: privateKeyToAccount(env as Hex).address };
+  } else {
+    cachedAgent = newParty();
+    console.log(
+      `[agent] delegate address ${cachedAgent.address} (ephemeral — set AGENT_DELEGATE_PRIVATE_KEY to persist across restarts)`,
+    );
+  }
+  return cachedAgent;
+}
+
+/** Identitas yang dibutuhkan client untuk membangun + menandatangani grant. */
+export function agentIdentity(): {
+  address: Address;
+  chainId: number;
+  delegationManager: Address;
+  usdc: Address;
+} {
+  const { env, chainId } = environment();
+  return {
+    address: agentParty().address,
+    chainId,
+    delegationManager: env.DelegationManager,
+    usdc: USDC,
+  };
+}
+
 /** Ambil environment (alamat DelegationManager + enforcer) untuk chain target. */
 export function environment(): { env: DeleGatorEnvironment; chainId: number } {
   const chainId = config.chain.id;
