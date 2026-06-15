@@ -150,7 +150,7 @@ export async function runSpike(
       const { imageUrl } = await runMedia(request);
       outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "image", imageUrl });
     } else if (t.agent === "writing") {
-      const { text } = await runText(request, "You are a professional copywriter. Write content in Indonesian.");
+      const { text } = await runText(request, "You are a professional copywriter. Write content in English.");
       outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text });
     } else if (t.agent === "translate") {
       const { text } = await runText(request, "You are a professional translator. Translate accurately.");
