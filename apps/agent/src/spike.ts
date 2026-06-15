@@ -7,6 +7,7 @@ import {
   type SpikeResult,
   CAPABILITIES,
 } from "./shared.js";
+import type { Address } from "viem";
 import type { Delegation } from "@metamask/delegation-toolkit";
 import { planRequest } from "./concierge/planner.js";
 import {
@@ -80,13 +81,16 @@ export async function runSpike(
   for (const t of plan.subtasks) {
     const capability = byId[t.agent];
     const specialist = newParty();
+    // Agent custom dengan wallet pembuat → pembayaran mengalir ke pembuatnya.
+    // Tanpa creator (agent bawaan) → ke seller mock.
+    const payTo = (capability?.creator ?? SELLER) as Address;
 
     // 2) Redelegasi: ven-AI → specialist (sub-cap, hanya menyempit).
     const child = await buildSpendingDelegation({
       from: agent,
       to: specialist.address,
       capUsdc: toUsdc(t.estimatedCost),
-      allowedTargets: [SELLER],
+      allowedTargets: [payTo],
       parent: root,
     });
     proofs.push({
@@ -110,7 +114,7 @@ export async function runSpike(
     const product = capability?.product ?? "dataset";
     const amount = toUsdc(t.estimatedCost).toString();
     const res = await paidFetch(
-      `${sellerBase}/seller/buy?product=${encodeURIComponent(product)}&amount=${amount}&q=${encodeURIComponent(request)}`,
+      `${sellerBase}/seller/buy?product=${encodeURIComponent(product)}&amount=${amount}&payTo=${payTo}&q=${encodeURIComponent(request)}`,
       specialist,
       { maxPayUsd: t.estimatedCost },
     );
@@ -121,7 +125,7 @@ export async function runSpike(
     // null (OFF/gagal) → pakai txHash simulasi dari x402. Demo tak putus.
     let txHash = res.txHash;
     const settled = await settleOnchain({
-      payTo: SELLER,
+      payTo,
       amountUsdc: toUsdc(res.paid),
     });
     if (settled) {
@@ -141,19 +145,27 @@ export async function runSpike(
     const node = nodes.find((n) => n.id === t.agent);
     if (node) node.spent = res.paid;
 
-    // 4) Eksekusi specialist agent — hasil beneran pakai Venice AI.
-    if (t.agent === "research") {
-      const { summary } = await runResearch(request);
-      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text: summary });
-    } else if (t.agent === "image") {
+    // 4) Eksekusi specialist agent — hasil beneran pakai Venice AI. Tipe bawaan
+    // punya prompt khusus; agent custom (+ audio/video) jatuh ke cabang generik
+    // yang memakai label + description-nya sebagai system prompt.
+    const label = capability?.label ?? t.agent;
+    if (capability?.product === "image" || t.agent === "image") {
       const { imageUrl } = await runMedia(request);
-      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "image", imageUrl });
+      outputs.push({ agent: t.agent, label, type: "image", imageUrl });
+    } else if (t.agent === "research") {
+      const { summary } = await runResearch(request);
+      outputs.push({ agent: t.agent, label, type: "text", text: summary });
     } else if (t.agent === "writing") {
       const { text } = await runText(request, "You are a professional copywriter. Write content in English.");
-      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text });
+      outputs.push({ agent: t.agent, label, type: "text", text });
     } else if (t.agent === "translate") {
       const { text } = await runText(request, "You are a professional translator. Translate accurately.");
-      outputs.push({ agent: t.agent, label: capability?.label ?? t.agent, type: "text", text });
+      outputs.push({ agent: t.agent, label, type: "text", text });
+    } else {
+      // Generik: agent custom buatan user, audio, video, dll.
+      const sys = `You are ${label}, a specialist agent. ${capability?.description ?? ""} Produce a concise, useful result in English for the user's request.`;
+      const { text } = await runText(request, sys);
+      outputs.push({ agent: t.agent, label, type: "text", text });
     }
   }
 
