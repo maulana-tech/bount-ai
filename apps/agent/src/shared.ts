@@ -84,7 +84,7 @@ export const CAPABILITIES: Capability[] = [
     label: "Research",
     description: "Gather and summarize data, sources, and competitors",
     keywords: ["research", "competitor", "market", "analyze", "analysis", "find", "data", "compare", "audit", "investigate"],
-    unitCostUsd: 2,
+    unitCostUsd: 0.5,
     product: "dataset",
   },
   {
@@ -92,7 +92,7 @@ export const CAPABILITIES: Capability[] = [
     label: "Copywriting",
     description: "Write copy, summaries, posts, and emails",
     keywords: ["write", "copy", "summary", "summarize", "article", "post", "caption", "email", "blog", "pitch", "draft"],
-    unitCostUsd: 1,
+    unitCostUsd: 0.2,
     product: "text",
   },
   {
@@ -100,7 +100,7 @@ export const CAPABILITIES: Capability[] = [
     label: "Image",
     description: "Generate images, posters, logos, and graphics",
     keywords: ["poster", "image", "picture", "logo", "graphic", "design", "illustration", "banner", "thumbnail", "art"],
-    unitCostUsd: 5,
+    unitCostUsd: 0.8,
     product: "image",
   },
   {
@@ -108,7 +108,7 @@ export const CAPABILITIES: Capability[] = [
     label: "Video",
     description: "Generate short video clips and animations",
     keywords: ["video", "clip", "animation", "reel", "trailer", "motion"],
-    unitCostUsd: 8,
+    unitCostUsd: 1,
     product: "video",
   },
   {
@@ -116,7 +116,7 @@ export const CAPABILITIES: Capability[] = [
     label: "Audio",
     description: "Generate voiceover, music, and audio",
     keywords: ["audio", "voice", "voiceover", "music", "sound", "podcast", "narration", "song"],
-    unitCostUsd: 3,
+    unitCostUsd: 0.5,
     product: "audio",
   },
   {
@@ -124,7 +124,7 @@ export const CAPABILITIES: Capability[] = [
     label: "Translation",
     description: "Translate and localize text between languages",
     keywords: ["translate", "translation", "localize", "localization", "language", "multilingual"],
-    unitCostUsd: 1,
+    unitCostUsd: 0.2,
     product: "text",
   },
 ];
