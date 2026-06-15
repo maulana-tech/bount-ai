@@ -1,29 +1,209 @@
-# ven-AI
+<div align="center">
 
-**Give an AI a budget — not your wallet.**
+<img src="./apps/web/public/logo.png" alt="ven-AI" width="120" height="120" />
 
-ven-AI is an autonomous spending agent built for the MetaMask Smart Accounts Kit × 1Shot API hackathon. You grant it a capped, revocable spending permission by **signing an ERC-7710 delegation with your wallet**; it plans a task, **redelegates sub-budgets** to specialist agents, and each agent **pays for the services it uses** via x402 — within limits that can only narrow as authority flows down.
+# ven-AI — Autonomous Spending Agent
 
-The core idea: today, giving an AI agent the ability to pay means handing over a private key. ven-AI replaces that with **programmable, bounded permission** — the agent transacts on its own, but the limits stay in your hands.
+*Give an AI a budget — not your wallet. Bounded, revocable spending powered by MetaMask Smart Accounts (ERC-7710 delegation), x402 payments, and Venice AI.*
 
-> See `CONTEXT.md` for the hackathon brief, `PROJECT.md` for the full product spec, `UI_GUIDE.md` for the design system, and `CLAUDE.md` for the working architecture notes.
+[![Live App](https://img.shields.io/badge/Live%20App-ven--ai--app.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://ven-ai-app.vercel.app)
+[![Agent API](https://img.shields.io/badge/Agent%20API-ven--ai--agent.vercel.app-00C7B7?style=for-the-badge&logo=vercel&logoColor=white)](https://ven-ai-agent.vercel.app/health)
+[![Built with](https://img.shields.io/badge/Built%20with-MetaMask%20Smart%20Accounts-F6851B?style=for-the-badge&logo=metamask&logoColor=white)](https://docs.metamask.io/delegation-toolkit/)
+[![Deployed on](https://img.shields.io/badge/Chain-Base%20Sepolia-0052FF?style=for-the-badge)](https://sepolia.basescan.org/)
 
----
+[Try the dApp ↗](https://ven-ai-app.vercel.app/) · [Agent health ↗](https://ven-ai-agent.vercel.app/health) · Demo Video *(coming soon)*
 
-## How it works
-
-1. **Grant a budget.** Connect a wallet (Base Sepolia) and click **Grant budget**. You sign an **ERC-7710 spending-limit delegation** (caveat `erc20TransferAmount`) to ven-AI's delegate address — off-chain, no gas. The signed root is the real grant. *(For zero-friction demos, the app also ships a **$5 free credit** that works without a wallet.)*
-2. **Write a request.** One sentence in the **Chat** page, e.g. *"research the coffee market and write a short summary."* The concierge breaks it into sub-tasks and allocates the budget.
-3. **Agents delegate and work.** ven-AI **redelegates** narrowed sub-budgets to the specialist agents the request needs, then each pays for what it uses via an x402 `402 → pay → retry` loop.
-4. **Result + proof.** You get the output (text / images) plus a trace: delegation hashes, who paid what, and how much budget is left.
-
-Permissions only ever **narrow** as they flow down (user → ven-AI → specialists); the sum of all sub-agent spend can never exceed your cap.
+</div>
 
 ---
 
-## The agents
+## Table of Contents
 
-ven-AI is **general, not task-specific**. The capability registry lives in `packages/shared/src/capabilities.ts` and is shared by both the web Agents page (display) and the agent service (selection + pricing). The concierge dynamically picks a subset per request (keyword heuristic today; Venice reasoning planned).
+- [The Problem](#the-problem)
+- [The Solution](#the-solution)
+- [Real-World Use Cases](#real-world-use-cases)
+- [System Architecture](#system-architecture)
+- [Grant & Delegation Flow](#grant--delegation-flow)
+- [Settlement (Dual-Mode)](#settlement-dual-mode)
+- [The Agents](#the-agents)
+- [Live Deployment](#live-deployment)
+- [Technical Deep Dive](#technical-deep-dive)
+- [Tech Stack](#tech-stack)
+- [Repository Structure](#repository-structure)
+- [Getting Started](#getting-started)
+- [Hackathon Tracks Mapping](#hackathon-tracks-mapping)
+- [Threat Model](#threat-model)
+- [Roadmap](#roadmap)
+- [Feature Status](#feature-status)
+- [Submission Checklist](#submission-checklist)
+- [Team](#team)
+- [References](#references)
+- [License](#license)
+
+---
+
+## The Problem
+
+Giving an AI agent the ability to *pay* for things today means handing over a **private key** — or pre-funding a hot wallet it fully controls. That is all-or-nothing custody:
+
+- **Unbounded** — a key holder can spend everything, not a capped amount.
+- **Irrevocable** — you cannot "un-give" a private key; you can only move funds.
+- **Unauditable** — no native notion of "this sub-agent may spend at most $X on Y."
+- **Unsafe to compose** — chaining agents (agent hires sub-agent) multiplies the blast radius.
+
+The net effect: **autonomous agents that transact are a security liability**, so most "AI + payments" demos either stay read-only or quietly trust a server-held key.
+
+## The Solution
+
+**ven-AI** replaces custody with **programmable, bounded permission**. You grant the agent a capped, revocable spending limit by **signing an ERC-7710 delegation with your wallet** — the agent transacts on its own, but the limits stay in your hands.
+
+- ✅ **Grant a budget, not a key** — sign a spending-limit delegation (caveat `erc20TransferAmount`) capped at, e.g., $5.
+- ✅ **The agent plans and delegates** — ven-AI breaks a request into sub-tasks and **redelegates** narrowed sub-budgets to specialist agents (research, copywriting, image, …).
+- ✅ **Each agent pays for what it uses** — service payments settle through an **x402** `402 → pay → retry` loop.
+- ✅ **Authority only narrows** — user → ven-AI → specialists; the sum of all sub-agent spend can never exceed your cap.
+- ✅ **AI-native output** — specialist work is generated by **Venice AI** (text + image).
+- ✅ **Provable** — every step returns delegation hashes + an activity trace.
+
+> **Key insight:** an agent does not need your keys to spend on your behalf — it needs a *bounded delegation* it can redelegate downward. The user signs once; the limits are enforced by the delegation, not by trust.
+
+## Real-World Use Cases
+
+| Use Case | Why bounded delegation matters |
+| --- | --- |
+| **Personal AI concierge** | "Research and produce a deck" without exposing your wallet to the agent. |
+| **Agent marketplaces** | A coordinator agent hires specialist agents, each on a sub-budget it cannot exceed. |
+| **Team / DAO ops** | Grant an ops agent a weekly cap for paid data/APIs; revoke anytime. |
+| **Pay-per-use AI services** | Agents settle x402 micro-payments per call instead of monthly seats. |
+| **Untrusted automation** | Run a third-party agent with a hard ceiling — worst case, it spends the cap, nothing more. |
+
+In every case the user keeps **custody and the ceiling**; the agent keeps **autonomy within the envelope**.
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Frontend["Frontend · Next.js 15 + RainbowKit"]
+        UI["Dashboard · Chat · Agents"]
+        BudgetStore["Budget store<br/>cap · spent · signed grant"]
+    end
+
+    subgraph ClientSDK["Client SDK"]
+        Grant["lib/grant.ts<br/>createDelegation · signDelegation"]
+        WalletC["wagmi · viem<br/>walletClient.signTypedData"]
+    end
+
+    subgraph AgentSvc["Agent · Hono service"]
+        Planner["concierge<br/>capability selection"]
+        Orchestrator["spike.ts<br/>orchestrator"]
+        Specialists["agents<br/>research · text · media"]
+        SettlementM["settlement<br/>gated on-chain redeem"]
+    end
+
+    subgraph OnchainL["On-chain · Base Sepolia"]
+        DM["DelegationManager<br/>0xdb9B…47dB3 (MetaMask)"]
+        USDC["USDC"]
+    end
+
+    subgraph ExternalL["External services"]
+        Venice["Venice AI<br/>text · image"]
+        Seller["Mock x402 seller"]
+        OneShot["1Shot relayer (gated)"]
+    end
+
+    UI --> BudgetStore
+    UI --> Grant
+    Grant --> WalletC
+    WalletC -. EIP-712 sign .-> DM
+    UI --> Orchestrator
+    Orchestrator --> Planner
+    Orchestrator --> Specialists
+    Orchestrator --> SettlementM
+    Specialists --> Venice
+    Specialists --> Seller
+    SettlementM -. redeem (gated) .-> DM
+    SettlementM --> USDC
+    Orchestrator -. relay (gated) .-> OneShot
+
+    classDef chain fill:#DBEAFE,stroke:#2563EB,stroke-width:2px
+    classDef ext fill:#FEF3C7,stroke:#D97706,stroke-width:2px
+    class DM,USDC chain
+    class Venice,Seller,OneShot ext
+```
+
+- **Signer-agnostic** — any wallet provider works (MetaMask extension, Embedded, Privy, …).
+- **Venice & ChainGPT-style keys** stay server-side on the agent; the browser never sees them.
+
+## Grant & Delegation Flow
+
+What happens from "Grant budget" to a finished result:
+
+```mermaid
+sequenceDiagram
+    participant User as User (Browser)
+    participant Wallet as MetaMask
+    participant Web as ven-AI Web
+    participant Agent as ven-AI Agent
+    participant Seller as x402 Seller
+    participant Venice as Venice AI
+
+    User->>Web: Grant budget (cap = $5)
+    Web->>Agent: GET /spike/agent (delegate address, chain, USDC)
+    Web->>Wallet: signDelegation (EIP-712, erc20TransferAmount ≤ cap)
+    Wallet-->>Web: signed root delegation
+    Web->>Web: store grant (localStorage)
+
+    User->>Web: "research the coffee market, write a summary"
+    Web->>Agent: POST /spike { request, rootDelegation, cap }
+    Agent->>Agent: plan → select capabilities
+
+    loop per specialist
+        Agent->>Agent: redelegate (parent = root, narrowed sub-cap)
+        Agent->>Seller: GET /seller/buy (no payment)
+        Seller-->>Agent: 402 Payment Required
+        Agent->>Seller: retry with X-PAYMENT
+        Seller-->>Agent: 200 + data
+        Agent->>Venice: generate output (text / image)
+        Venice-->>Agent: result
+    end
+
+    Agent-->>Web: SpikeResult (outputs + delegation proofs + budget)
+    Web-->>User: results + updated budget
+
+    Note over Web,Agent: Root signed by the user's wallet.<br/>Every sub-budget only narrows. Cap is never exceeded.
+```
+
+What the user's machine actually does:
+
+1. **Fetch the agent identity.** `GET /spike/agent` returns the agent's stable delegate address, chain id, USDC, and DelegationManager — so the client builds a delegation pointing at the right delegate.
+2. **Sign the grant.** `createDelegation` (scope `erc20TransferAmount`, max = cap) → the wallet signs the EIP-712 typed data. Off-chain, **no gas**. The signed root *is* the grant.
+3. **Send with each request.** The signed root + cap ride along in the `POST /spike` body; the agent uses it as the delegation root and **redelegates** to specialists.
+4. **Demo without a wallet.** A built-in **$5 free credit** lets the whole flow run keyless for quick demos; the budget meter reads real spend from `SpikeResult`.
+
+## Settlement (Dual-Mode)
+
+x402 settlement is **gated** — off-chain simulation by default, real on-chain redemption when enabled and funded, with a safe fallback that never breaks the demo:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Planned: POST /spike
+    Planned --> Paid: x402 loop (402 → pay → 200)
+    Paid --> Simulated: ENABLE_ONCHAIN_SETTLEMENT off
+    Paid --> Redeeming: gated on + key + RPC
+    Redeeming --> OnChain: redeemDelegations ok
+    Redeeming --> Simulated: unfunded / error (fallback)
+    Simulated --> [*]
+    OnChain --> [*]
+```
+
+> `settlement: "simulated" | "onchain"` is reported in every `SpikeResult`. The on-chain `redeemDelegations` call is a wired **seam** — it additionally needs a Smart-Account (or EOA+7702) delegator, redemption-consistent caveats, and a funded testnet delegate. See [Feature Status](#feature-status).
+
+---
+
+## The Agents
+
+ven-AI is **general, not task-specific**. The capability registry lives in `packages/shared/src/capabilities.ts` and is shared by the web Agents page (display) and the agent service (selection + pricing). The concierge dynamically picks the subset a request needs (keyword heuristic today; Venice reasoning planned).
 
 | Agent | Does | Price / use | Pays for |
 | --- | --- | --- | --- |
@@ -34,98 +214,128 @@ ven-AI is **general, not task-specific**. The capability registry lives in `pack
 | **Audio** | Voiceover, music, sound | $0.50 | `audio` |
 | **Translation** | Translate & localize between languages | $0.20 | `text` |
 
-**Custom agents (hybrid model).** Users can create their own specialists on `/app/agents` — stored client-side (`lib/customAgents.ts`, localStorage), sent in the `/spike` request body, sanitized by the agent, and merged into the selection pool. They pay their declared cost through the mock seller. Adding a built-in agent = one entry in `capabilities.ts`.
+**Custom agents (hybrid model).** Users create their own specialists on `/app/agents` — stored client-side (`lib/customAgents.ts`, localStorage), sent in the `/spike` body, sanitized by the agent, and merged into the selection pool. They pay their declared cost through the mock seller. Adding a built-in agent = one entry in `capabilities.ts`.
 
-Specialist generation runs through **Venice AI** (OpenAI-compatible) when `VENICE_API_KEY` is set, and falls back to a `[venice-stub]` placeholder otherwise.
-
----
-
-## Hackathon tracks
-
-One app, designed to qualify across multiple tracks:
-
-| Track | How ven-AI addresses it | Status |
-| --- | --- | --- |
-| **Best Agent** | Acts autonomously on the user's behalf under a wallet-signed Smart Accounts delegation. | ✅ working |
-| **Best A2A Coordination** | **Redelegates** (ERC-7710) narrowed sub-budgets to specialist agents. | ✅ working |
-| **Best x402 + ERC-7710** | Specialists settle service payments via an x402 loop using delegated authority. | ⚠️ x402 loop + redelegation real; on-chain settlement gated (see Status) |
-| **Best use of Venice AI** | Venice generates specialist outputs (text + image). | ✅ when keyed |
-| **Best use of 1Shot Relayer** | Relay 7710 txs / gas in stablecoins / 7702 upgrade / webhooks. | ⏳ scaffolded, gated |
-
-> The permission mechanism is **ERC-7710 delegation** (user signs a root spending limit, agent redelegates), not ERC-7715 Advanced Permissions — chosen to match the agent-to-agent redelegation flow. See `CONTEXT.md` for full qualification criteria.
+> Specialist generation runs through **Venice AI** (OpenAI-compatible) when `VENICE_API_KEY` is set on the agent, and falls back to a `[venice-stub]` placeholder otherwise.
 
 ---
 
-## Architecture
+## Live Deployment
 
-A pnpm monorepo with three workspaces:
-
-```
-apps/web/         Next.js 15 frontend — landing, dashboard, chat, agents
-apps/agent/       Hono service — concierge orchestration + integrations
-packages/shared/  TypeScript domain types shared by web and agent
-```
-
-### `apps/web` — React 19, Tailwind 3, RainbowKit + wagmi + viem
-
-| Route | Purpose |
+| Component | URL / Address |
 | --- | --- |
-| `/` | Landing page (Lenis smooth scroll, reveal sections) |
-| `/app` | Dashboard — budget meter, **Grant budget** modal, capabilities grid, preview demos, activity feed |
-| `/app/chat` | Live agent flow — calls `/spike`, renders real outputs + budget; 3-column layout (previews · chat · output/history) |
-| `/app/agents` | Specialist registry + custom-agent creation |
+| **Web app** | [ven-ai-app.vercel.app](https://ven-ai-app.vercel.app) |
+| **Agent API** | [ven-ai-agent.vercel.app](https://ven-ai-agent.vercel.app/health) · `GET /spike/agent` |
+| **Chain** | Base Sepolia (chain id `84532`) |
+| **DelegationManager** (MetaMask Smart Accounts Kit) | `0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3` |
+| **USDC** (Base Sepolia) | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
+| **Agent delegate** (users delegate to this) | exposed live via `GET /spike/agent` |
 
-Client budget state is a single source of truth: `lib/budget.tsx` (React context + localStorage) holds cap / spent / the signed root delegation, shared between dashboard and chat. `lib/grant.ts` builds + signs the ERC-7710 grant via the wallet; `lib/agent.ts` calls the agent.
-
-### `apps/agent` — Hono service, organized by responsibility
-
-```
-concierge/      request planner (selects capabilities)
-agents/         research, media, text specialist runners
-integrations/   delegation (ERC-7710 build/caveats/redelegation/sign)
-                x402 (402 → pay → retry loop)
-                settlement (gated on-chain redeem + simulated fallback)
-                venice (OpenAI-compatible client)
-                oneshot (1Shot relayer probe, gated)
-routes/         plan, spike, seller (mock x402 seller), webhook
-spike.ts        the orchestrator
-```
-
-**Endpoints:** `GET /health` · `POST /plan` · `POST /spike` · `GET /spike/agent` (delegate identity for grant) · `GET /spike/capabilities` (1Shot probe) · `GET /seller/buy` (mock x402 seller) · `POST /webhook/oneshot`.
-
-### `packages/shared`
-
-The contract (`ActivityEvent`, `DelegationNode`, `TaskPlan`, `SpikeResult`, `Capability`, …) consumed by both sides via `transpilePackages`, so the UI and agent never drift.
-
-> ⚠️ The agent currently keeps its **own copy** of the `CAPABILITIES` array in `apps/agent/src/shared.ts`. When changing a capability's cost/keywords, edit **both** that file and `packages/shared/src/capabilities.ts`.
-
-### Chain
-
-Defaults to **Base Sepolia** (`84532`) via `CHAIN_ID`; the MetaMask delegation toolkit supports all major EVM chains (Ethereum, Base, OP, Arbitrum, Polygon, Linea, Gnosis, BSC + testnets). The web client reads the active chain, USDC, and DelegationManager from `GET /spike/agent`, so switching chains is config-only (`CHAIN_ID` / `USDC_ADDRESS` + wagmi `chains`).
+> **No custom smart contracts — by design.** ven-AI does not deploy its own Solidity. The on-chain layer is the **MetaMask Smart Accounts Kit** (DelegationManager + caveat enforcers + smart-account implementations), already deployed deterministically across major EVM chains. ven-AI integrates it through `@metamask/delegation-toolkit`. The chain is config-only (`CHAIN_ID` / `USDC_ADDRESS` + wagmi `chains`); the toolkit supports Ethereum, Base, Optimism, Arbitrum, Polygon, Linea, Gnosis, BSC and their testnets.
 
 ---
 
-## Tech stack
+## Technical Deep Dive
 
-- **Frontend:** Next.js 15 (App Router), React 19, Tailwind CSS 3, TypeScript
-- **Wallet / chain:** RainbowKit, wagmi, viem (signer-agnostic), Base Sepolia
-- **Smart accounts / permissions:** `@metamask/delegation-toolkit` (ERC-7710 / ERC-7702)
-- **Smooth scroll / motion:** Lenis, Framer Motion
-- **Agent service:** Hono, tsx
-- **AI:** Venice AI (OpenAI-compatible — text + image)
-- **Payments / relayer:** x402, 1Shot Permissionless Relayer (gated)
+### Layer 1 — Permission model (`apps/agent/src/integrations/delegation.ts`)
+
+The heart of ven-AI is **ERC-7710 delegation + redelegation** via `@metamask/delegation-toolkit`:
+
+1. **Root grant (user-signed).** The client builds `createDelegation({ scope: erc20TransferAmount, maxAmount: cap, to: agentDelegate })`, the user signs it with their wallet (EIP-712, off-chain), and it becomes the root.
+2. **Redelegation (narrow-only).** For each selected specialist, the agent builds a child delegation with `parentDelegation = root`, a smaller `maxAmount`, and `allowedTargets` caveats — signed by the agent's stable delegate key.
+3. **Proof.** `getDelegationHashOffchain` yields a hash per hop, returned in `SpikeResult.proofs` as audit evidence.
+
+### Layer 2 — Orchestrator (`apps/agent/src/spike.ts`)
+
+`POST /spike` runs the vertical slice: **plan → root grant → redelegate per specialist → x402 pay → generate → settle (gated)**. With a wallet-signed `rootDelegation` it uses the real grant; without one it self-generates a root for keyless demos. Returns a typed `SpikeResult` (`@concierge/shared`).
+
+### Layer 3 — x402 payments + settlement (`integrations/x402.ts`, `integrations/settlement.ts`)
+
+- **x402 loop.** `paidFetch` performs `402 → attach X-PAYMENT → retry → 200` against a local **mock seller** (`routes/seller.ts`), bounded by each specialist's sub-cap.
+- **Dual-mode settlement.** `settleOnchain` is gated by `ENABLE_ONCHAIN_SETTLEMENT` + `SETTLEMENT_PRIVATE_KEY` + `RPC_URL`; it checks the delegate's gas balance, attempts `redeemDelegations`, and **always falls back** to simulated on any error.
+
+### Layer 4 — Venice AI (`integrations/venice.ts`)
+
+OpenAI-compatible client. `veniceChat` powers research/copywriting/translation; `veniceImage` powers the image agent. Live when keyed, deterministic stub otherwise.
+
+### Layer 5 — Frontend (`apps/web/src`)
+
+- **Framework:** Next.js 15 (App Router) + React 19 + TypeScript
+- **Wallet:** RainbowKit 2.2 + wagmi 2.x + viem (signer-agnostic, locale forced to `en-US`)
+- **Grant UX:** `lib/grant.ts` builds + signs the ERC-7710 delegation; lazy-loaded modal keeps the toolkit out of the initial bundle
+- **State:** a single `BudgetProvider` (React context + localStorage) is the source of truth for cap / spent / signed grant, shared across dashboard and chat
+- **Routes:** `/` landing · `/app` dashboard · `/app/chat` live agent flow · `/app/agents` registry + create
 
 ---
 
-## Getting started
+## Tech Stack
 
-**Prerequisites:** Node 20+ and pnpm 9+.
+```text
+Permissions  ┃ @metamask/delegation-toolkit 0.13 (ERC-7710 / ERC-7702)
+             ┃ DelegationManager + caveat enforcers (MetaMask-deployed)
+Wallet/chain ┃ RainbowKit 2.2, wagmi 2.x, viem — Base Sepolia (84532)
+AI           ┃ Venice AI (OpenAI-compatible — text + image)
+Payments     ┃ x402 (402 → pay → retry) · 1Shot Permissionless Relayer (gated)
+Frontend     ┃ Next.js 15, React 19, Tailwind 3, Lenis, Framer Motion
+Agent        ┃ Hono, @hono/node-server, tsx, Node 20+
+Shared       ┃ TypeScript domain contract (@concierge/shared)
+Tooling      ┃ pnpm workspaces, tsc, ESLint
+```
+
+## Repository Structure
+
+```text
+ven-AI/
+├── apps/
+│   ├── web/                        # Next.js 15 frontend
+│   │   └── src/
+│   │       ├── app/                # / · /app · /app/chat · /app/agents
+│   │       ├── components/         # one concern per file (+ landing/, ui/)
+│   │       │   └── GrantBudgetModal.tsx
+│   │       └── lib/
+│   │           ├── budget.tsx      # budget store (context + localStorage)
+│   │           ├── grant.ts        # ERC-7710 build + wallet sign
+│   │           ├── agent.ts        # /spike client
+│   │           └── wagmi.ts        # chains + connectors
+│   └── agent/                      # Hono service
+│       └── src/
+│           ├── concierge/          # planner (capability selection)
+│           ├── agents/             # research · media · text
+│           ├── integrations/
+│           │   ├── delegation.ts   # ERC-7710 build/caveats/redelegation/sign
+│           │   ├── x402.ts         # 402 → pay → retry loop
+│           │   ├── settlement.ts   # gated on-chain redeem + fallback
+│           │   ├── venice.ts       # OpenAI-compatible client
+│           │   └── oneshot.ts      # 1Shot relayer probe (gated)
+│           ├── routes/             # plan · spike · seller (mock) · webhook
+│           ├── spike.ts            # orchestrator
+│           └── shared.ts           # agent-side types + CAPABILITIES copy
+├── packages/shared/                # shared domain types + capability registry
+├── CONTEXT.md · PROJECT.md · UI_GUIDE.md · CLAUDE.md
+├── README.md                       # ← you are here
+└── LICENSE
+```
+
+> ⚠️ The agent keeps its **own copy** of the `CAPABILITIES` array in `apps/agent/src/shared.ts`. When changing a capability's cost/keywords, edit **both** that file and `packages/shared/src/capabilities.ts`.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js ≥ 20, pnpm ≥ 9
+- A wallet on **Base Sepolia** (faucet: [Coinbase / Base Sepolia](https://docs.base.org/docs/tools/network-faucets/))
+
+### 1. Clone & install
 
 ```bash
+git clone https://github.com/maulana-tech/ven-AI.git
+cd ven-AI
 pnpm install
 ```
 
-Set up environment variables (each app has its own example):
+### 2. Environment
 
 ```bash
 cp apps/web/.env.example   apps/web/.env.local
@@ -134,84 +344,159 @@ cp apps/agent/.env.example apps/agent/.env.local
 
 **`apps/web`**
 - `NEXT_PUBLIC_WC_PROJECT_ID` — WalletConnect / Reown id for real wallet connect.
-- `NEXT_PUBLIC_AGENT_URL` — agent base URL (defaults to `http://localhost:8787`).
+- `NEXT_PUBLIC_AGENT_URL` — agent base URL (defaults to `http://localhost:8787`; set to the deployed agent for production).
 
 **`apps/agent`**
-- `AGENT_DELEGATE_PRIVATE_KEY` — stable delegate key (the address users delegate to). Without it the address regenerates per restart and stored grants stop matching.
+- `AGENT_DELEGATE_PRIVATE_KEY` — **stable** delegate key. The address users delegate to; without it the address regenerates per restart (and per serverless cold start) and stored grants stop matching.
 - `VENICE_API_KEY` — enables live Venice generation (stub otherwise).
 - `CHAIN_ID` / `CHAIN_NAME` / `USDC_ADDRESS` — target chain (default Base Sepolia).
 - `ENABLE_ONCHAIN_SETTLEMENT` + `SETTLEMENT_PRIVATE_KEY` + `RPC_URL` — opt into real on-chain settlement (default off → simulated).
-- `ONESHOT_API_KEY` / `ONESHOT_WEBHOOK_SECRET` / `ONESHOT_RELAYER_URL` — 1Shot relayer.
+- `ONESHOT_API_KEY` / `ONESHOT_WEBHOOK_SECRET` / `ONESHOT_RELAYER_URL` — 1Shot relayer (gated).
 
-Everything builds and type-checks without any keys set; they are only needed for live integrations.
+> Everything builds and type-checks **without any keys**; they are only needed for live integrations.
 
-Run it:
+### 3. Run
 
 ```bash
-pnpm dev          # web + agent together
-pnpm dev:web      # web only  -> http://localhost:3000
-pnpm dev:agent    # agent only -> http://localhost:8787
+pnpm dev          # web (3000) + agent (8787)
+pnpm dev:web      # web only   → http://localhost:3000
+pnpm dev:agent    # agent only → http://localhost:8787
 ```
 
----
+### 4. End-to-end walkthrough
 
-## Scripts
+1. **`/app`** → connect wallet (Base Sepolia) → **Grant budget** → sign the spending limit in MetaMask.
+2. **`/app/chat`** → send *"research the coffee market and write a short summary"*.
+3. Watch the budget meter decrement; the right panel fills with generated output + history.
+4. **`/app/agents`** → create a custom agent and watch the concierge pick it.
+
+### Scripts
 
 | Command | Description |
 | --- | --- |
-| `pnpm dev` | Run web and agent in parallel |
-| `pnpm dev:web` / `pnpm dev:agent` | Run a single app |
+| `pnpm dev` / `pnpm dev:web` / `pnpm dev:agent` | Run all / web / agent |
 | `pnpm build` | Production build of the web app (validates SSR + types) |
 | `pnpm -r typecheck` | Type-check every workspace |
 | `pnpm --filter @concierge/web lint` | Lint the web app |
 
 ---
 
-## Project structure
+## Hackathon Tracks Mapping
 
-```
-.
-├─ apps/
-│  ├─ web/
-│  │  └─ src/
-│  │     ├─ app/            # routes: / · /app · /app/chat · /app/agents
-│  │     ├─ components/     # one concern per file (+ landing/, ui/)
-│  │     └─ lib/            # budget store, grant, agent client, wagmi, utils
-│  └─ agent/
-│     └─ src/
-│        ├─ concierge/      # planner
-│        ├─ agents/         # research, media, text
-│        ├─ integrations/   # delegation, x402, settlement, venice, oneshot
-│        ├─ routes/         # plan, spike, seller, webhook
-│        └─ spike.ts        # orchestrator
-├─ packages/shared/         # shared domain types + capability registry
-├─ CONTEXT.md               # hackathon brief
-├─ PROJECT.md               # product + technical spec
-├─ UI_GUIDE.md              # design system + anti-slop rules
-└─ CLAUDE.md                # guidance for AI coding agents
-```
+Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTEXT.md` for the full criteria.
+
+| Track | How ven-AI addresses it | Status |
+| --- | --- | --- |
+| **Hard requirement** — Smart Accounts Kit in the main flow | User signs an ERC-7710 spending-limit delegation in their wallet; the agent redelegates from it. | ✅ working |
+| **Best Agent** | Acts autonomously on the user's behalf within a wallet-signed delegation. | ✅ working |
+| **Best A2A Coordination** | **Redelegates** (ERC-7710) narrowed sub-budgets along user → ven-AI → specialists. | ✅ working |
+| **Best x402 + ERC-7710** | Specialists settle service payments via an x402 loop using delegated authority. | ⚠️ x402 loop + redelegation real; on-chain settlement gated (seam) |
+| **Best use of Venice AI** | Venice generates specialist outputs (text + image) in the main flow. | ✅ live when keyed |
+| **Best use of 1Shot Relayer** | Relay 7710 txs / gas in stablecoins / 7702 upgrade / webhooks. | ⏳ scaffolded, gated |
+
+> The permission mechanism is **ERC-7710 delegation** (signed root + redelegation), not ERC-7715 Advanced Permissions — chosen to match the agent-to-agent flow.
 
 ---
 
-## Design system
+## Threat Model
 
-Deliberately not a default template. Warm-paper light theme with a single bronze accent, monospace for all numbers, hairline borders, and a signature corner-frame motif on every panel. **No gradients, no emoji** — marks are CSS-drawn or use the project logo. The rationale and full token set live in `UI_GUIDE.md`; the tokens are in `apps/web/tailwind.config.ts`.
+| Adversary | Capability | What ven-AI bounds |
+| --- | --- | --- |
+| The agent itself | Holds a redelegated sub-budget. | ✅ Can spend at most its `erc20TransferAmount` cap to `allowedTargets`; cannot exceed or reach other targets. |
+| A compromised specialist | Receives a redelegation. | ✅ Authority only ever narrows; its cap ≤ parent cap; revoking the root kills the chain. |
+| The agent server | Runs orchestration + holds the delegate key. | ✅ The delegate key signs *redelegations*, not user funds; it can never sign a root larger than the user signed. |
+| Public on-chain observer | Reads chain state. | ⚠️ Delegations are signed off-chain (counterfactual) in this build; on-chain redemption is gated. |
+
+**Honestly out of scope (current build):** real on-chain settlement (simulated by default), 1Shot relaying (stubbed), and a deployed Smart-Account delegator (the grant currently signs from an EOA). See [Feature Status](#feature-status).
 
 ---
 
-## Status
+## Roadmap
 
-The **Phase 2 vertical slice works** end-to-end:
+**Hackathon scope (delivered):**
 
-- ✅ **Wallet-signed grant** — user signs an ERC-7710 spending-limit delegation in MetaMask; the agent uses it as the root and redelegates to specialists.
-- ✅ **Real budget** — dashboard + chat read live cap/spent from `SpikeResult` (no more mock numbers); $5 free-credit fallback for keyless demos.
-- ✅ **x402 loop** — `402 → pay → retry` against a local mock seller, with delegation hashes as proof.
-- ✅ **Venice generation** — specialist outputs (text + image) when keyed.
-- ⚠️ **On-chain settlement** — dual-mode: simulated by default; a gated path (`ENABLE_ONCHAIN_SETTLEMENT`) attempts a real `redeemDelegations` and safely falls back. The redeem call itself is a wired **seam** — it still needs a Smart Account (or EOA + 7702) delegator, redemption-consistent caveats, and a funded testnet delegate.
-- ⏳ **1Shot relayer** — capability probe gated by `ONESHOT_RELAYER_URL`; relay still stubbed.
+- [x] Wallet-signed **ERC-7710** spending-limit grant (off-chain, no gas)
+- [x] **Redelegation** to specialist agents with narrowed caveats
+- [x] Real budget accounting (cap / spent) wired from `SpikeResult`
+- [x] **x402** `402 → pay → retry` loop vs a local mock seller
+- [x] **Venice AI** text + image generation in the main flow
+- [x] Hybrid custom agents (create on `/app/agents`)
+- [x] Dual-mode settlement **gating** (simulated default, on-chain seam + safe fallback)
+- [x] Deployed: web + agent on Vercel, Base Sepolia config
+
+**Post-hackathon:**
+
+- [ ] Wire the on-chain `redeemDelegations` seam (Smart-Account delegator + 7702 + funded testnet)
+- [ ] 1Shot Permissionless Relayer: relay 7710 txs, gas in stablecoins, webhooks as source of truth
+- [ ] Venice-driven planning (replace the keyword heuristic)
+- [ ] Multi-chain selector in the grant UI
+- [ ] Server-side persistence for custom agents (beyond localStorage)
+- [ ] Recurring / streaming allowances
+
+---
+
+## Feature Status
+
+| Feature | Status | Notes |
+| --- | --- | --- |
+| Wallet-signed ERC-7710 grant | ✅ Live | EIP-712, off-chain, no gas |
+| Redelegation to specialists | ✅ Live | Narrow-only caveats; hashes in `SpikeResult.proofs` |
+| Real budget meter (cap / spent) | ✅ Live | From `SpikeResult`; $5 free-credit fallback |
+| x402 payment loop | ✅ Live | Against local **mock seller** |
+| Venice text + image | ✅ Live (when keyed) | `[venice-stub]` fallback without `VENICE_API_KEY` |
+| Custom agents | ✅ Live | localStorage → `/spike` body → merged into pool |
+| On-chain settlement | ⚠️ Gated seam | `ENABLE_ONCHAIN_SETTLEMENT`; needs SA delegator + caveat fix + funds |
+| 1Shot relayer | ⏳ Stub | Capability probe gated by `ONESHOT_RELAYER_URL` |
+| Live web + agent (Vercel) | ✅ Live | [app](https://ven-ai-app.vercel.app) · [agent](https://ven-ai-agent.vercel.app/health) |
+| Demo video | ⏳ Planned | Script outline ready |
+
+---
+
+## Submission Checklist
+
+- [x] Public GitHub repository
+- [x] README with architecture, install, and usage
+- [x] Functional frontend deployed (Vercel)
+- [x] Agent service deployed (Vercel) with stable delegate key
+- [x] MetaMask Smart Accounts Kit integrated in the main flow (ERC-7710 grant + redelegation)
+- [x] Venice AI producing real output in the main flow
+- [ ] Demo video showing the MetaMask grant working end-to-end
+- [ ] (Bonus) On-chain x402 settlement enabled
+- [ ] (Bonus) 1Shot relayer integrated
+
+---
+
+## Team
+
+| Name | Role | Links |
+| --- | --- | --- |
+| **Maulana** | Full-stack & integration | [GitHub](https://github.com/maulana-tech) |
+
+> Entry for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon.
+
+---
+
+## References
+
+- [MetaMask Delegation Toolkit (Smart Accounts Kit)](https://docs.metamask.io/delegation-toolkit/)
+- [ERC-7710 — Smart Contract Delegation](https://eips.ethereum.org/)
+- [ERC-7715 — Wallet Permissions](https://eips.ethereum.org/)
+- [x402 payments](https://www.x402.org/)
+- [1Shot API — Permissionless Relayer & gas sponsorship](https://1shotapi.com/docs/quickstarts/gas-sponsorship-eip7710)
+- [Venice AI docs](https://docs.venice.ai/overview/about-venice)
 
 ---
 
 ## License
 
-Hackathon project. Not yet licensed for reuse.
+Hackathon project — not yet licensed for reuse. A `LICENSE` will be added before any public release.
+
+---
+
+<div align="center">
+
+**Built for the MetaMask Smart Accounts Kit × 1Shot API hackathon**
+
+**Give an AI a budget — not your wallet. · ERC-7710 delegation · x402 · Venice AI · Base Sepolia**
+
+</div>
