@@ -3,19 +3,26 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { CornerFrame } from "@/components/CornerFrame";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { BudgetMeter } from "@/components/BudgetMeter";
 import { ActivityFeed } from "@/components/ActivityFeed";
-import { MOCK_BUDGET, MOCK_FEED, MOCK_DELEGATION } from "@/lib/mock";
+import { MOCK_FEED } from "@/lib/mock";
+
+// Toolkit delegation berat → muat hanya saat modal grant dibuka.
+const GrantBudgetModal = dynamic(
+  () => import("@/components/GrantBudgetModal").then((m) => m.GrantBudgetModal),
+  { ssr: false },
+);
+import { useBudget } from "@/lib/budget";
 import { CAPABILITIES } from "@concierge/shared";
 import { usd } from "@/lib/utils";
 
 export default function Page() {
-  const budget = MOCK_BUDGET;
-  const feed = MOCK_FEED;
-  const capTotal = MOCK_DELEGATION.filter((n) => n.role !== "user").reduce(
-    (s, n) => s + n.spent,
-    0,
-  );
+  const { cap, spent, activity, revoke, granted } = useBudget();
+  const [grantOpen, setGrantOpen] = useState(false);
+  // Tampilkan aktivitas nyata; jatuh ke contoh statis saat belum ada run.
+  const feed = activity.length > 0 ? activity : MOCK_FEED;
 
   return (
     <>
@@ -23,8 +30,24 @@ export default function Page() {
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-6">
         {/* hero: budget */}
         <div className="mb-8">
-          <BudgetMeter spent={budget.spent} cap={budget.cap} />
+          <BudgetMeter spent={spent} cap={cap} onRevoke={revoke} />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="font-mono text-[11px] text-ink-faint">
+              {granted
+                ? "wallet-granted budget · ERC-7710 spending limit signed by you"
+                : "demo free credit · $5.00 — not yet wallet-backed"}
+            </p>
+            <button
+              onClick={() => setGrantOpen(true)}
+              className="shrink-0 rounded border border-gold/40 px-3 py-1.5 text-xs font-medium text-gold transition-colors hover:bg-gold-tint"
+            >
+              {granted ? "Re-grant budget" : "Grant budget"}
+            </button>
+          </div>
         </div>
+        {grantOpen && (
+          <GrantBudgetModal open onClose={() => setGrantOpen(false)} />
+        )}
 
         {/* quick actions */}
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -54,7 +77,7 @@ export default function Page() {
           </Link>
           <div className="border border-line bg-panel p-5">
             <div className="text-sm font-semibold tracking-tight">Total Spent</div>
-            <p className="mt-1 font-mono text-2xl tnum text-gold">${usd(capTotal)}</p>
+            <p className="mt-1 font-mono text-2xl tnum text-gold">${usd(spent)}</p>
           </div>
         </div>
 
