@@ -10,10 +10,13 @@ export function CornerFrame({
   children,
   label,
   className,
+  bodyClassName,
 }: {
   children: ReactNode;
   label?: string;
   className?: string;
+  /** override the inner content wrapper (e.g. make it a flex-fill column) */
+  bodyClassName?: string;
 }) {
   return (
     <div className={cn("relative", className)}>
@@ -32,7 +35,7 @@ export function CornerFrame({
         </span>
       )}
 
-      <div className="relative p-5">{children}</div>
+      <div className={cn("relative p-5", bodyClassName)}>{children}</div>
     </div>
   );
 }
