@@ -26,7 +26,7 @@ import { runMedia } from "./agents/media.js";
 import { runText } from "./agents/text.js";
 
 /**
- * Fase 2 vertical-slice: rencana → delegasi root (user → ven-AI) → redelegasi
+ * Fase 2 vertical-slice: rencana → delegasi root (user → bount-AI) → redelegasi
  * per specialist (menyempit sub-budget) → pembayaran x402 per specialist.
  *
  * NYATA: konstruksi + caveat (spending limit + allowedTargets) + redelegasi +
@@ -54,7 +54,7 @@ export async function runSpike(
   const planCost = plan.subtasks.reduce((sum, t) => sum + t.estimatedCost, 0);
   const cap = grant ? grant.capUsd : planCost;
 
-  // 1) Delegasi root: user → ven-AI (plafon penuh, whitelist seller).
+  // 1) Delegasi root: user → bount-AI (plafon penuh, whitelist seller).
   const root =
     grant?.root ??
     (await buildSpendingDelegation({
@@ -65,11 +65,11 @@ export async function runSpike(
     }));
 
   const proofs: DelegationProof[] = [
-    { from: "user", to: "ven-AI", hash: delegationHash(root), capUsd: cap },
+    { from: "user", to: "bount-AI", hash: delegationHash(root), capUsd: cap },
   ];
   const nodes: DelegationNode[] = [
     { id: "user", role: "user", label: "User", cap, spent: 0, active: true },
-    { id: "concierge", role: "concierge", label: "ven-AI", cap, spent: 0, active: true },
+    { id: "concierge", role: "concierge", label: "bount-AI", cap, spent: 0, active: true },
   ];
   const activity: ActivityEvent[] = [];
   const outputs: AgentOutput[] = [];
@@ -85,7 +85,7 @@ export async function runSpike(
     // Tanpa creator (agent bawaan) → ke seller mock.
     const payTo = (capability?.creator ?? SELLER) as Address;
 
-    // 2) Redelegasi: ven-AI → specialist (sub-cap, hanya menyempit).
+    // 2) Redelegasi: bount-AI → specialist (sub-cap, hanya menyempit).
     const child = await buildSpendingDelegation({
       from: agent,
       to: specialist.address,
@@ -94,7 +94,7 @@ export async function runSpike(
       parent: root,
     });
     proofs.push({
-      from: "ven-AI",
+      from: "bount-AI",
       to: t.agent,
       hash: delegationHash(child),
       capUsd: t.estimatedCost,

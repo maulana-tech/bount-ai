@@ -17,7 +17,7 @@ export function Problem() {
         </Reveal>
         <Reveal delay={0.1}>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-muted">
-            ven-AI breaks that trade-off: programmable, bounded permission. The
+            bount-AI breaks that trade-off: programmable, bounded permission. The
             agent can transact on its own, but control &mdash; cap, categories,
             expiry, revocation &mdash; stays with you.
           </p>

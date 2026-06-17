@@ -1,4 +1,4 @@
-# AGENTS.md — ven-AI monorepo
+# AGENTS.md — bount-AI monorepo
 
 ## TL;DR
 

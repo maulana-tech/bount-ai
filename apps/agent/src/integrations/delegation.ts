@@ -32,7 +32,7 @@ export function newParty(): Party {
 }
 
 /**
- * Party delegate ven-AI yang STABIL — alamatnya di-expose ke client lewat
+ * Party delegate bount-AI yang STABIL — alamatnya di-expose ke client lewat
  * `GET /spike/agent` agar user bisa menandatangani root delegation yang
  * mendelegasikan ke alamat ini. Persisten via `AGENT_DELEGATE_PRIVATE_KEY`;
  * tanpa env, di-generate sekali per proses (cukup untuk demo).

@@ -187,7 +187,7 @@ Alasan: (a) memenuhi syarat MetaMask via *Smart Accounts*, (b) menghindari kurun
 
 ## 11. Langkah berikutnya
 1. ~~Riset docs (Fase 0)~~ — selesai, lihat §10.
-2. ~~Spike Fase 2~~ — **selesai & terverifikasi.** `POST /spike` di agent: plan → delegasi root (user→ven-AI) → redelegasi ke specialist dgn caveat (scope `erc20TransferAmount` + `allowedTargets`) → loop x402 (mock seller). Konstruksi+caveat+redelegasi+tanda tangan+hash **nyata** (toolkit); settlement on-chain & relay 1Shot masih disimulasi/gated. Dashboard memanggilnya dan merender jejak nyata.
+2. ~~Spike Fase 2~~ — **selesai & terverifikasi.** `POST /spike` di agent: plan → delegasi root (user→bount-AI) → redelegasi ke specialist dgn caveat (scope `erc20TransferAmount` + `allowedTargets`) → loop x402 (mock seller). Konstruksi+caveat+redelegasi+tanda tangan+hash **nyata** (toolkit); settlement on-chain & relay 1Shot masih disimulasi/gated. Dashboard memanggilnya dan merender jejak nyata.
 3. **Sisa Fase 2 (butuh kredensial/dana):**
    - Konfirmasi `relayer_getCapabilities` 1Shot untuk Base (set `ONESHOT_RELAYER_URL`).
    - Tukar EOA spike → MetaMask Smart Account (`toMetaMaskSmartAccount`, 7702 via wallet) dan eksekusi settlement x402 + relay 1Shot di Base (testnet→mainnet).

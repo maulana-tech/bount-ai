@@ -10,13 +10,13 @@ export function Logo() {
     <Link href="/" className="flex items-center gap-2.5">
       <Image
         src="/logo.png"
-        alt="ven-AI"
+        alt="bount-AI"
         width={28}
         height={28}
         priority
         className="h-7 w-7 rounded"
       />
-      <span className="text-lg font-semibold tracking-tight">ven-AI</span>
+      <span className="text-lg font-semibold tracking-tight">bount-AI</span>
     </Link>
   );
 }

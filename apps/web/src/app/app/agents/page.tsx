@@ -11,11 +11,11 @@ import { getCustomAgents, removeCustomAgent } from "@/lib/customAgents";
 const HOW_IT_WORKS = [
   {
     title: "Browse the catalog",
-    body: "Built-in specialists ship with ven-AI. Add your own and it joins the same pool.",
+    body: "Built-in specialists ship with bount-AI. Add your own and it joins the same pool.",
   },
   {
     title: "Ask in Chat",
-    body: "ven-AI reads your request and picks the agents it needs by their keywords.",
+    body: "bount-AI reads your request and picks the agents it needs by their keywords.",
   },
   {
     title: "It delegates & pays",
@@ -44,7 +44,7 @@ export default function AgentsPage() {
           <div className="max-w-2xl">
             <h1 className="text-2xl font-semibold tracking-tight">Agents</h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-              Specialists ven-AI can delegate to. It picks the ones a request
+              Specialists bount-AI can delegate to. It picks the ones a request
               needs, redelegates each its own sub-budget, and each pays for the
               service it uses via x402. Add your own and it joins the catalog.
             </p>

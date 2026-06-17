@@ -294,7 +294,7 @@ export default function ChatPage() {
 
 function ImageCard({ src, caption }: { src: string; caption: string }) {
   const [busy, setBusy] = useState(false);
-  const filename = `ven-ai-${caption.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "image"}.webp`;
+  const filename = `bount-ai-${caption.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "image"}.webp`;
 
   async function share() {
     setBusy(true);
@@ -305,7 +305,7 @@ function ImageCard({ src, caption }: { src: string; caption: string }) {
         canShare?: (d: ShareData) => boolean;
       };
       if (nav.canShare?.({ files: [file] })) {
-        await nav.share({ files: [file], title: "ven-AI", text: caption });
+        await nav.share({ files: [file], title: "bount-AI", text: caption });
       } else {
         window.open(src, "_blank");
       }
@@ -320,8 +320,8 @@ function ImageCard({ src, caption }: { src: string; caption: string }) {
     const url =
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://ven-ai-app.vercel.app";
-    const text = `Made with ven-AI — "${caption.slice(0, 120)}". Give an AI a budget, not your wallet: ERC-7710 delegation + x402 + Venice AI.`;
+        : "https://bount-ai-app.vercel.app";
+    const text = `Made with bount-AI — "${caption.slice(0, 120)}". Give an AI a budget, not your wallet: ERC-7710 delegation + x402 + Venice AI.`;
     const intent = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(intent, "_blank", "noopener,noreferrer");
   }

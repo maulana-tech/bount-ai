@@ -57,7 +57,7 @@ export function GrantBudgetModal({
     <Modal open={open} onClose={onClose} title="Grant budget">
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-ink-muted">
-          Sign a spending limit with your wallet. ven-AI may spend up to this cap
+          Sign a spending limit with your wallet. bount-AI may spend up to this cap
           on your behalf via ERC-7710 delegation — and nothing more.
         </p>
         <label className="block">

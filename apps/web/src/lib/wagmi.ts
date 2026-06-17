@@ -10,7 +10,7 @@ import { base, baseSepolia } from "wagmi/chains";
  * ⚠️ Konfirmasi 1Shot `relayer_getCapabilities` untuk Base sebelum Fase 2.
  */
 export const wagmiConfig = getDefaultConfig({
-  appName: "ven-AI",
+  appName: "bount-AI",
   projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "PLACEHOLDER_PROJECT_ID",
   chains: [baseSepolia, base],
   ssr: true,

@@ -62,9 +62,9 @@ export interface TaskPlan {
  * Dipakai untuk menampilkan rantai delegasi sebagai bukti, bukan klaim.
  */
 export interface DelegationProof {
-  /** label pihak pendelegasi (mis. "user", "ven-AI") */
+  /** label pihak pendelegasi (mis. "user", "bount-AI") */
   from: string;
-  /** label penerima (mis. "ven-AI", "research") */
+  /** label penerima (mis. "bount-AI", "research") */
   to: string;
   /** hash delegasi (getDelegationHashOffchain) */
   hash: string;

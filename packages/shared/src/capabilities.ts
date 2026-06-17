@@ -1,6 +1,6 @@
 /**
  * Registry specialist agent (kapabilitas) — palet hal yang bisa dilakukan
- * ven-AI, tiap satu didukung layanan berbayar (via x402). Concierge memilih
+ * bount-AI, tiap satu didukung layanan berbayar (via x402). Concierge memilih
  * subset yang relevan untuk tiap permintaan, jadi agent ini UMUM.
  *
  * Dipakai bersama: web (halaman Agents) menampilkannya; agent memilih + memberi

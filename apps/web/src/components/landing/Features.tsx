@@ -11,7 +11,7 @@ const FEATURES = [
   },
   {
     title: "Agents that delegate to each other",
-    body: "ven-AI splits sub-budgets across specialist agents, each with its own limit. The total never exceeds your cap.",
+    body: "bount-AI splits sub-budgets across specialist agents, each with its own limit. The total never exceeds your cap.",
   },
   {
     title: "Pay-per-use via x402",

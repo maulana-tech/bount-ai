@@ -11,7 +11,7 @@ export const MOCK_BUDGET: BudgetState = { cap: 5, spent: 1.5 };
 
 export const MOCK_DELEGATION: DelegationNode[] = [
   { id: "user", role: "user", label: "User", cap: 5, spent: 1.5, active: true },
-  { id: "concierge", role: "concierge", label: "ven-AI", cap: 5, spent: 1.5, active: true },
+  { id: "concierge", role: "concierge", label: "bount-AI", cap: 5, spent: 1.5, active: true },
   { id: "research", role: "research", label: "Research", cap: 1, spent: 1, active: true },
   { id: "media", role: "media", label: "Media", cap: 1, spent: 0.5, active: true },
 ];

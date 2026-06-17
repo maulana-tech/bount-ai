@@ -9,12 +9,12 @@ const STEPS = [
   {
     n: "02",
     title: "Write a request",
-    body: "One sentence, e.g. “research 3 competitors, then make a poster.” ven-AI breaks it into sub-tasks and allocates the budget.",
+    body: "One sentence, e.g. “research 3 competitors, then make a poster.” bount-AI breaks it into sub-tasks and allocates the budget.",
   },
   {
     n: "03",
     title: "Agents delegate and work",
-    body: "ven-AI passes sub-budgets to specialist agents. Each pays for the services it uses — data, models, generation — via x402.",
+    body: "bount-AI passes sub-budgets to specialist agents. Each pays for the services it uses — data, models, generation — via x402.",
   },
   {
     n: "04",

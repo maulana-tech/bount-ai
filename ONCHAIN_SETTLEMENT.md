@@ -8,7 +8,7 @@ When enabled, after the x402 `402 → pay → retry` handshake, the funded **pay
 
 > Implementation: `apps/agent/src/integrations/settlement.ts` (called from `apps/agent/src/spike.ts`). This does a direct USDC transfer by the payer; the full `redeemDelegations` execution from a Smart-Account delegator (deploy + bundler) is the next step.
 
-## Environment variables (`apps/agent/.env.local` and/or Vercel project `ven-ai-agent`)
+## Environment variables (`apps/agent/.env.local` and/or Vercel project `bount-ai-agent`)
 
 | Var | Value | Notes |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ Expect `settlement: "onchain"` and a real tx hash → open `https://sepolia.base
 
 ### 4. Enable on the deployed agent (Vercel)
 
-Set the same three vars on the **`ven-ai-agent`** Vercel project, fund the address of the `SETTLEMENT_PRIVATE_KEY` you set there, and redeploy.
+Set the same three vars on the **`bount-ai-agent`** Vercel project, fund the address of the `SETTLEMENT_PRIVATE_KEY` you set there, and redeploy.
 
 ## Verify it's working / why it fell back
 

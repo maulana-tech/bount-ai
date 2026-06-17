@@ -16,7 +16,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ven-AI",
+  title: "bount-AI",
   description:
     "Give an AI a budget and a bounded permission — it plans, delegates, and pays for services on your behalf, within limits you control.",
   manifest: "/site.webmanifest",

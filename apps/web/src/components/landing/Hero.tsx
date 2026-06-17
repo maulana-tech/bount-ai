@@ -23,7 +23,7 @@ export function Hero() {
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-muted">
-                ven-AI plans, delegates, and pays for services on your behalf —
+                bount-AI plans, delegates, and pays for services on your behalf —
                 within a cap you set and can revoke anytime. Every dollar that
                 moves is provable on-chain.
               </p>
