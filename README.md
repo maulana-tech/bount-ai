@@ -444,6 +444,7 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 | Integration Standard | Implementation Details | Status |
 | --- | --- | --- |
 | **MetaMask Smart Accounts Kit** | User signs an ERC-7710 spending-limit delegation in their wallet; the agent redelegates from it. | ✅ active |
+| **Terminal 3 Agent Dev Kit** | Compiles TypeScript skills to WASM using `jco` and `wasi-js`, running inside verified TEE enclaves. | ✅ active |
 | **Autonomous Agent Engine** | Acts autonomously on the user's behalf within a wallet-signed delegation. | ✅ active |
 | **Agent-to-Agent (A2A) Coordination** | **Redelegates** (ERC-7710) narrowed sub-budgets along user → bount-AI → specialists. | ✅ active |
 | **x402 Micropayments & ERC-7710 Enforcer** | Specialists settle service payments via an x402 loop using delegated authority. | ⚠️ x402 loop + redelegation real; on-chain settlement gated (seam) |
@@ -473,6 +474,8 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 
 - [x] Wallet-signed **ERC-7710** spending-limit grant (off-chain, no gas)
 - [x] **Redelegation** to specialist agents with narrowed caveats
+- [x] **Terminal 3 TEE Enclaves** and custom sandbox WASM compiler
+- [x] Local developer command CLI (**npx skill**)
 - [x] Real budget accounting (cap / spent) wired from `SpikeResult`
 - [x] **x402** `402 → pay → retry` loop vs a local mock seller
 - [x] **Venice AI** text + image generation in the main flow
@@ -497,11 +500,14 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 | --- | --- | --- |
 | Wallet-signed ERC-7710 grant | ✅ Live | EIP-712, off-chain, no gas |
 | Redelegation to specialists | ✅ Live | Narrow-only caveats; hashes in `SpikeResult.proofs` |
+| Terminal 3 TEE Enclaves | ✅ Live | WASM secure sandbox execution on Hono agent |
+| Local npx skill CLI | ✅ Live | init, build, publish, run commands supported |
+| EIP-191 CLI Auth Gateway | ✅ Live | Browser smart-account login redirects to CLI callback |
 | Real budget meter (cap / spent) | ✅ Live | From `SpikeResult`; $5 free-credit fallback |
 | x402 payment loop | ✅ Live | Against local **mock seller** |
 | Venice text + image | ✅ Live (when keyed) | `[venice-stub]` fallback without `VENICE_API_KEY` |
 | Custom agents | ✅ Live | localStorage → `/spike` body → merged into pool |
-| On-chain settlement | ✅ Live | Real USDC transfer on Base Sepolia — [proof tx](https://sepolia.basescan.org/tx/0x2d6f3b1660c90d5c5a15df8159e4f598cc85491d891a5303854288e4abcc4d22) |
+| On-chain settlement | ✅ Live | Real USDC transfer on Base Sepolia — proof tx |
 | 1Shot relayer | ⏳ Stub | Capability probe gated by `ONESHOT_RELAYER_URL` |
 | Live web + agent (Vercel) | ✅ Live | [app](https://bount-ai-app.vercel.app) · [agent](https://bount-ai-agent.vercel.app/health) |
 | Demo video | ⏳ Planned | Script outline ready |
@@ -521,6 +527,7 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 ## References
 
 - [MetaMask Delegation Toolkit (Smart Accounts Kit)](https://docs.metamask.io/delegation-toolkit/)
+- [Terminal 3 Agent Dev Kit (TEE Enclaves)](https://terminal3.io)
 - [ERC-7710 — Smart Contract Delegation](https://eips.ethereum.org/)
 - [ERC-7715 — Wallet Permissions](https://eips.ethereum.org/)
 - [x402 payments](https://www.x402.org/)
