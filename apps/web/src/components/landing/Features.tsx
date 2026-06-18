@@ -6,8 +6,16 @@ const FEATURES = [
     body: "A cap, categories, and expiry you define. Revoke anytime — the agent loses the ability to pay that instant.",
   },
   {
-    title: "A budget you watch move",
-    body: "Balance and every payment update in real time. Know exactly what's spent and what's left, no guessing.",
+    title: "Secure TEE Enclaves (Terminal 3)",
+    body: "WASM custom skills execute inside hardware-isolated enclaves. Safe from tampering and node operator snooping.",
+  },
+  {
+    title: "Local Developer CLI (`npx skill`)",
+    body: "Initialize, compile, publish, and test TEE skills directly in your terminal. Integrates x402 payment loops.",
+  },
+  {
+    title: "Session-Locked Portal",
+    body: "EIP-191 signature login locks session as Buyer (delegate budget) or Seller (earn fees on published TEE skills).",
   },
   {
     title: "Agents that delegate to each other",
@@ -15,15 +23,7 @@ const FEATURES = [
   },
   {
     title: "Pay-per-use via x402",
-    body: "Each agent pays only for what it actually uses — data, models, generation — as micropayments, not subscriptions.",
-  },
-  {
-    title: "Gas paid in stablecoins",
-    body: "Transactions are relayed through 1Shot; gas is paid in USDC. Status comes from webhooks, not guesswork polling.",
-  },
-  {
-    title: "Every action provable on-chain",
-    body: "Not text claims. Each payment has a transaction hash you can trace in an explorer yourself.",
+    body: "Settle payments instantly via x402 loops, with transparent on-chain transactions and hashes.",
   },
 ];
 
