@@ -284,6 +284,14 @@ OpenAI-compatible client. `veniceChat` powers research/copywriting/translation; 
 - **State:** a single `BudgetProvider` (React context + localStorage) is the source of truth for cap / spent / signed grant, shared across dashboard and chat
 - **Routes:** `/` landing · `/app` dashboard · `/app/chat` live agent flow · `/app/agents` registry + create
 
+### Layer 6 — Terminal 3 TEE ADK & npx skill CLI (`packages/cli`, `apps/agent/src/spike.ts`)
+
+bount-AI integrates secure execution using the **Terminal 3 Agent Dev Kit (TEE Enclaves)** and a custom CLI client:
+
+1. **Host-Excluding Bundler:** The `packages/cli` tool compiles TypeScript/JavaScript skills locally. Since host APIs (e.g. `t3n:host/kv`) are resolved inside the enclave container itself, `compile.ts` utilizes `esbuild` with `external: ["t3n:host/*"]` to safely exclude host imports during local asset building.
+2. **TEE Sandbox Execution:** Compiled WASM binaries are published to the agent backend under `published_skills/`. When a skill is executed, the agent orchestrator (`spike.ts`) initiates the WASM sandbox environment, outputs enclave validation status logs, and prepends security verification headers.
+3. **Cryptographic Gateway Auth:** The `npx skill login` command boots a local callback server on port 12345. It redirects the terminal session to `/app/cli-auth` on the web app. The frontend prompts a MetaMask smart account EIP-191 signature to confirm ownership and returns the verified auth session back to the local CLI callback.
+
 ---
 
 ## Tech Stack
