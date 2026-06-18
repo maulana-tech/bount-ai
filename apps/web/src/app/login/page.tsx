@@ -179,40 +179,18 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* Right Pane: Image Preview (visible on desktop) */}
+      {/* Right Pane: Video Preview (visible on desktop) */}
       <div className="relative hidden lg:block bg-panel border-l border-line overflow-hidden">
-        <div className="absolute inset-0 z-0 bg-panel-2/20" />
-        <div className="relative z-10 flex h-full w-full flex-col justify-between p-12">
-          {/* Subtle decoration rule */}
-          <div className="flex items-center justify-between border-b border-line pb-4">
-            <span className="font-mono text-xs uppercase tracking-wide text-ink-muted">System Blueprint</span>
-            <span className="font-mono text-xs text-gold">TEE Node v0.2.0</span>
-          </div>
-
-          <div className="my-auto flex flex-col items-center justify-center">
-            {/* The Preview Video */}
-            <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden border border-line-strong bg-panel-2/50 rounded shadow-sm">
-              <video
-                src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-700 ease-out"
-              />
-            </div>
-            <p className="mt-4 text-center font-mono text-[11px] text-ink-muted">
-              TEE Enclave Verification & x402 Micro-Stablecoin Settlement
-            </p>
-          </div>
-
-          {/* Subtext info */}
-          <div className="flex items-center justify-between border-t border-line pt-4 font-mono text-[10px] text-ink-faint">
-            <span>METAMASK SA DELEGATION</span>
-            <span>SECURE SANDBOX COMPILING</span>
-          </div>
-        </div>
+        <video
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-700 ease-out"
+        />
+        <div className="absolute inset-0 bg-ink/5 mix-blend-multiply pointer-events-none" />
       </div>
     </div>
   );
