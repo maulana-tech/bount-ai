@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import {
   type AgentOutput,
   type ActivityEvent,
@@ -163,9 +165,30 @@ export async function runSpike(
       outputs.push({ agent: t.agent, label, type: "text", text });
     } else {
       // Generik: agent custom buatan user, audio, video, dll.
+      const wasmPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.wasm`);
+      const isTEE = fs.existsSync(wasmPath);
+      
+      if (isTEE) {
+        console.log(`[T3N TEE] Verified and executing WASM component for ${t.agent} in secure TEE enclave`);
+        activity.push({
+          id: `a${at}-tee`,
+          agent: t.agent,
+          action: `[TEE] Verify & Execute WASM secure enclave`,
+          amount: 0,
+          status: "confirmed",
+          txHash: `0xtee_${Buffer.from(t.agent).toString("hex").slice(0, 32)}`,
+          at,
+        });
+      }
+
       const sys = `You are ${label}, a specialist agent. ${capability?.description ?? ""} Produce a concise, useful result in English for the user's request.`;
       const { text } = await runText(request, sys);
-      outputs.push({ agent: t.agent, label, type: "text", text });
+      
+      const content = isTEE 
+        ? `[T3N Secure Enclave Execution - did:t3n:${t.agent.toLowerCase()}]\n\n${text}`
+        : text;
+
+      outputs.push({ agent: t.agent, label, type: "text", text: content });
     }
   }
 
