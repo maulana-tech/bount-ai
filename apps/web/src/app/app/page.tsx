@@ -14,6 +14,7 @@ import { CAPABILITIES, type Capability } from "@concierge/shared";
 import { usd, cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
 import { StatusDot } from "@/components/ui/StatusDot";
+import { useRouter } from "next/navigation";
 
 // Toolkit delegation berat → muat hanya saat modal grant dibuka.
 const GrantBudgetModal = dynamic(
@@ -22,6 +23,7 @@ const GrantBudgetModal = dynamic(
 );
 
 export default function Page() {
+  const router = useRouter();
   const { cap, spent, activity, revoke, granted, usage } = useBudget();
   const { address } = useAccount();
   const [grantOpen, setGrantOpen] = useState(false);
@@ -31,15 +33,22 @@ export default function Page() {
 
   useEffect(() => {
     setCustom(getCustomAgents());
-    const savedRole = localStorage.getItem("bountai.role");
-    if (savedRole === "buyer" || savedRole === "seller") {
-      setRole(savedRole);
+    const raw = localStorage.getItem("bountai.session");
+    if (raw) {
+      try {
+        const session = JSON.parse(raw);
+        if (session.role === "buyer" || session.role === "seller") {
+          setRole(session.role);
+        }
+      } catch {
+        // Ignore
+      }
     }
   }, []);
 
-  const handleRoleChange = (newRole: "buyer" | "seller") => {
-    setRole(newRole);
-    localStorage.setItem("bountai.role", newRole);
+  const handleLogout = () => {
+    localStorage.removeItem("bountai.session");
+    router.push("/login");
   };
 
   const copyCommand = (id: string) => {
@@ -127,29 +136,22 @@ export default function Page() {
     <>
       <Navbar variant="app" />
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-6">
-        {/* Role toggle */}
-        <div className="mb-6 flex border-b border-line">
+        {/* Dashboard Header */}
+        <div className="mb-8 flex items-center justify-between border-b border-line pb-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight capitalize text-ink">
+              {role === "buyer" ? "Buyer Dashboard" : "Seller Dashboard"}
+            </h1>
+            <p className="mt-1 text-xs text-ink-muted leading-relaxed">
+              Account: <code className="font-mono text-[11px] bg-panel px-1.5 py-0.5 rounded text-ink">{address?.slice(0, 6)}…{address?.slice(-4)}</code>
+            </p>
+          </div>
+          
           <button
-            onClick={() => handleRoleChange("buyer")}
-            className={cn(
-              "px-5 py-3 text-sm font-semibold tracking-tight transition-colors border-b-2 -mb-[2px]",
-              role === "buyer"
-                ? "border-gold text-gold"
-                : "border-transparent text-ink-muted hover:text-ink hover:border-line-strong",
-            )}
+            onClick={handleLogout}
+            className="rounded border border-line px-3.5 py-2 text-xs font-semibold text-ink-muted hover:text-ink hover:border-line-strong transition-colors bg-panel hover:bg-panel-2"
           >
-            Buyer Mode
-          </button>
-          <button
-            onClick={() => handleRoleChange("seller")}
-            className={cn(
-              "px-5 py-3 text-sm font-semibold tracking-tight transition-colors border-b-2 -mb-[2px]",
-              role === "seller"
-                ? "border-gold text-gold"
-                : "border-transparent text-ink-muted hover:text-ink hover:border-line-strong",
-            )}
-          >
-            Seller Mode
+            Switch Mode / Logout
           </button>
         </div>
 
