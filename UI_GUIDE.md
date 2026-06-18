@@ -45,8 +45,8 @@ Palet: **netral hangat + satu aksen gold**. Di latar terang, gold dipertua jadi 
 
 ```css
 /* ---- Surfaces (warm paper ramp) ---- */
---bg:            #F7F5F1;   /* page background — warm paper, BUKAN #fff */
---surface:       #FFFFFF;   /* panel                       */
+--bg:            #FFFFFF;   /* page background — white     */
+--surface:       #F7F5F1;   /* panel (warm paper)          */
 --surface-2:     #F0EDE7;   /* elevated / row hover        */
 --border:        #E4E0D8;   /* hairline 1px (warm gray)    */
 --border-strong: #C8C3B8;   /* corner brackets, dividers   */
@@ -74,7 +74,7 @@ Aturan pakai warna:
 - **Hijau** = HANYA transaksi confirmed / sukses.
 - **Merah** = HANYA error, limit kena, revoke.
 - Sisanya: grayscale hangat.
-- **Wajib:** latar = warm paper (`--bg`), JANGAN `#FFFFFF` polos untuk halaman — putih murni = berasa template kosong. Panel boleh putih biar "naik" dari paper.
+- **Wajib:** latar = putih (`--bg`). Panel menggunakan warm paper (`--surface`) agar terlihat kontras dan memiliki karakter hangat seperti lembaran dokumen di atas meja putih.
 
 ---
 

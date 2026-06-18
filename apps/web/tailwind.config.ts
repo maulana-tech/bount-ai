@@ -14,9 +14,9 @@ const config: Config = {
     extend: {
       colors: {
         // surfaces (warm paper ramp)
-        paper: "#F7F5F1", // page background — JANGAN #fff
+        paper: "#FFFFFF", // page background — white
         panel: {
-          DEFAULT: "#FFFFFF",
+          DEFAULT: "#F7F5F1", // panel background — warm paper
           2: "#F0EDE7", // elevated / row hover
         },
         line: {
