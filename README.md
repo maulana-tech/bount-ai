@@ -429,18 +429,18 @@ bount-AI provides a local developer CLI allowing you to build and run skills ins
 
 ---
 
-## Hackathon Tracks Mapping
+## Compliance & Integration Standards
 
-Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTEXT.md` for the full criteria.
+bount-AI is fully integrated with key decentralized permission and micro-billing standards:
 
-| Track | How bount-AI addresses it | Status |
+| Integration Standard | Implementation Details | Status |
 | --- | --- | --- |
-| **Hard requirement** — Smart Accounts Kit in the main flow | User signs an ERC-7710 spending-limit delegation in their wallet; the agent redelegates from it. | ✅ working |
-| **Best Agent** | Acts autonomously on the user's behalf within a wallet-signed delegation. | ✅ working |
-| **Best A2A Coordination** | **Redelegates** (ERC-7710) narrowed sub-budgets along user → bount-AI → specialists. | ✅ working |
-| **Best x402 + ERC-7710** | Specialists settle service payments via an x402 loop using delegated authority. | ⚠️ x402 loop + redelegation real; on-chain settlement gated (seam) |
-| **Best use of Venice AI** | Venice generates specialist outputs (text + image) in the main flow. | ✅ live when keyed |
-| **Best use of 1Shot Relayer** | Relay 7710 txs / gas in stablecoins / 7702 upgrade / webhooks. | ⏳ scaffolded, gated |
+| **MetaMask Smart Accounts Kit** | User signs an ERC-7710 spending-limit delegation in their wallet; the agent redelegates from it. | ✅ active |
+| **Autonomous Agent Engine** | Acts autonomously on the user's behalf within a wallet-signed delegation. | ✅ active |
+| **Agent-to-Agent (A2A) Coordination** | **Redelegates** (ERC-7710) narrowed sub-budgets along user → bount-AI → specialists. | ✅ active |
+| **x402 Micropayments & ERC-7710 Enforcer** | Specialists settle service payments via an x402 loop using delegated authority. | ⚠️ x402 loop + redelegation real; on-chain settlement gated (seam) |
+| **Venice AI LLM Execution** | Venice generates specialist outputs (text + image) in the main flow. | ✅ live when keyed |
+| **1Shot Relayer Integration** | Relay 7710 txs / gas in stablecoins / 7702 upgrade / webhooks. | ⏳ scaffolded, gated |
 
 > The permission mechanism is **ERC-7710 delegation** (signed root + redelegation), not ERC-7715 Advanced Permissions — chosen to match the agent-to-agent flow.
 
@@ -461,7 +461,7 @@ Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTE
 
 ## Roadmap
 
-**Hackathon scope (delivered):**
+**Core Architecture (delivered):**
 
 - [x] Wallet-signed **ERC-7710** spending-limit grant (off-chain, no gas)
 - [x] **Redelegation** to specialist agents with narrowed caveats
@@ -472,7 +472,7 @@ Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTE
 - [x] Dual-mode settlement **gating** (simulated default, on-chain seam + safe fallback)
 - [x] Deployed: web + agent on Vercel, Base Sepolia config
 
-**Post-hackathon:**
+**Next Phases:**
 
 - [ ] Wire the on-chain `redeemDelegations` seam (Smart-Account delegator + 7702 + funded testnet)
 - [ ] 1Shot Permissionless Relayer: relay 7710 txs, gas in stablecoins, webhooks as source of truth
@@ -500,27 +500,11 @@ Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTE
 
 ---
 
-## Submission Checklist
-
-- [x] Public GitHub repository
-- [x] README with architecture, install, and usage
-- [x] Functional frontend deployed (Vercel)
-- [x] Agent service deployed (Vercel) with stable delegate key
-- [x] MetaMask Smart Accounts Kit integrated in the main flow (ERC-7710 grant + redelegation)
-- [x] Venice AI producing real output in the main flow
-- [ ] Demo video showing the MetaMask grant working end-to-end
-- [x] (Bonus) On-chain x402 settlement enabled — [proof tx](https://sepolia.basescan.org/tx/0x2d6f3b1660c90d5c5a15df8159e4f598cc85491d891a5303854288e4abcc4d22)
-- [ ] (Bonus) 1Shot relayer integrated
-
----
-
 ## Team
 
 | Name | Role | Links |
 | --- | --- | --- |
 | **Maulana** | Full-stack & integration | [GitHub](https://github.com/maulana-tech) |
-
-> Entry for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon.
 
 ---
 
@@ -537,13 +521,13 @@ Built for the **MetaMask Smart Accounts Kit × 1Shot API** hackathon. See `CONTE
 
 ## License
 
-Hackathon project — not yet licensed for reuse. A `LICENSE` will be added before any public release.
+Commercial software — all rights reserved. A `LICENSE` will be added before any public release.
 
 ---
 
 <div align="center">
 
-**Built for the MetaMask Smart Accounts Kit × 1Shot API hackathon**
+**bount-AI · Autonomous Spending Agent**
 
 **Give an AI a budget — not your wallet. · ERC-7710 delegation · x402 · Venice AI · Base Sepolia**
 

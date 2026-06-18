@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-4 py-10 sm:flex-row sm:items-center">
         <Logo />
         <p className="font-mono text-xs text-ink-faint">
-          MetaMask Smart Accounts Kit × 1Shot API Hackathon
+          bount-AI · Autonomous Spending Agent
         </p>
       </div>
     </footer>
