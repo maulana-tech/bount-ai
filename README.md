@@ -4,12 +4,12 @@
 
 # bount-AI — Autonomous Spending Agent
 
-*Give an AI a budget — not your wallet. Bounded, revocable spending powered by MetaMask Smart Accounts (ERC-7710 delegation), x402 payments, and Venice AI.*
+*Give an AI a budget — not your wallet. Bounded, revocable spending powered by MetaMask Smart Accounts (ERC-7710 delegation), x402 payments, Venice AI, and compiled in Terminal 3 TEE enclaves.*
 
+[![Challenge](https://img.shields.io/badge/Bounty-Terminal%203%20ADK-purple?style=for-the-badge)](https://terminal3.io)
 [![Live App](https://img.shields.io/badge/Live%20App-bount--ai--app.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://bount-ai-app.vercel.app)
 [![Agent API](https://img.shields.io/badge/Agent%20API-bount--ai--agent.vercel.app-00C7B7?style=for-the-badge&logo=vercel&logoColor=white)](https://bount-ai-agent.vercel.app/health)
 [![Built with](https://img.shields.io/badge/Built%20with-MetaMask%20Smart%20Accounts-F6851B?style=for-the-badge&logo=metamask&logoColor=white)](https://docs.metamask.io/delegation-toolkit/)
-[![Deployed on](https://img.shields.io/badge/Chain-Base%20Sepolia-0052FF?style=for-the-badge)](https://sepolia.basescan.org/)
 
 [Try the dApp ↗](https://bount-ai-app.vercel.app/) · [Agent health ↗](https://bount-ai-agent.vercel.app/health) · Demo Video *(coming soon)*
 
@@ -506,6 +506,8 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 | --- | --- | --- |
 | **Maulana** | Full-stack & integration | [GitHub](https://github.com/maulana-tech) |
 
+> Submission entry for the **Terminal 3 Agent Dev Kit Bounty Challenge**.
+
 ---
 
 ## References
@@ -527,8 +529,8 @@ Commercial software — all rights reserved. A `LICENSE` will be added before an
 
 <div align="center">
 
-**bount-AI · Autonomous Spending Agent**
+**bount-AI · Built for the Terminal 3 Agent Dev Kit Bounty Challenge**
 
-**Give an AI a budget — not your wallet. · ERC-7710 delegation · x402 · Venice AI · Base Sepolia**
+**Give an AI a budget — not your wallet. · ERC-7710 delegation · x402 · Venice AI · Terminal 3 ADK**
 
 </div>
