@@ -58,6 +58,9 @@ The net effect: **autonomous agents that transact are a security liability**, so
 **bount-AI** replaces custody with **programmable, bounded permission**. You grant the agent a capped, revocable spending limit by **signing an ERC-7710 delegation with your wallet** — the agent transacts on its own, but the limits stay in your hands.
 
 - ✅ **Grant a budget, not a key** — sign a spending-limit delegation (caveat `erc20TransferAmount`) capped at, e.g., $5.
+- ✅ **Secure TEE Enclaves (Terminal 3 ADK)** — Custom agents/skills run inside verified, hardware-secured WASM enclaves. No one, not even the node operator, can tamper with or inspect execution.
+- ✅ **Local CLI Development (`npx skill`)** — Developers can bootstrap, compile, publish, and securely execute skills directly from their terminal.
+- ✅ **Session-locked Role Portal** — Cryptographic signature login locks users as either Buyers (granted budget/use agents) or Sellers (earn fees on published TEE skills).
 - ✅ **The agent plans and delegates** — bount-AI breaks a request into sub-tasks and **redelegates** narrowed sub-budgets to specialist agents (research, copywriting, image, …).
 - ✅ **Each agent pays for what it uses** — service payments settle through an **x402** `402 → pay → retry` loop.
 - ✅ **Authority only narrows** — user → bount-AI → specialists; the sum of all sub-agent spend can never exceed your cap.
@@ -85,8 +88,14 @@ In every case the user keeps **custody and the ceiling**; the agent keeps **auto
 ```mermaid
 flowchart TB
     subgraph Frontend["Frontend · Next.js 15 + RainbowKit"]
-        UI["Dashboard · Chat · Agents"]
+        UI["Role-locked Dashboard · Chat · Agents"]
+        AuthGate["/login & /app/layout.tsx<br/>EIP-191 Session Guard"]
         BudgetStore["Budget store<br/>cap · spent · signed grant"]
+    end
+
+    subgraph CLIWorkspace["CLI Workspace"]
+        CLI["npx skill CLI<br/>init · build · publish · run"]
+        Callback["Local Callback Svr<br/>Port 12345"]
     end
 
     subgraph ClientSDK["Client SDK"]
@@ -97,6 +106,7 @@ flowchart TB
     subgraph AgentSvc["Agent · Hono service"]
         Planner["concierge<br/>capability selection"]
         Orchestrator["spike.ts<br/>orchestrator"]
+        TEEEnclave["published_skills/<br/>Secure Enclave Verification"]
         Specialists["agents<br/>research · text · media"]
         SettlementM["settlement<br/>gated on-chain redeem"]
     end
@@ -112,12 +122,19 @@ flowchart TB
         OneShot["1Shot relayer (gated)"]
     end
 
+    UI --> AuthGate
     UI --> BudgetStore
     UI --> Grant
     Grant --> WalletC
     WalletC -. EIP-712 sign .-> DM
     UI --> Orchestrator
+    
+    CLI --> Callback
+    Callback -. EIP-191 session verify .-> AuthGate
+    CLI -. publish WASM .-> AgentSvc
+    
     Orchestrator --> Planner
+    Orchestrator --> TEEEnclave
     Orchestrator --> Specialists
     Orchestrator --> SettlementM
     Specialists --> Venice
@@ -133,6 +150,7 @@ flowchart TB
 ```
 
 - **Signer-agnostic** — any wallet provider works (MetaMask extension, Embedded, Privy, …).
+- **Secure Sandbox Compilation** — Local code is compiled using `jco` and `wasi-js`, running isolated inside verified enclaves.
 - **Venice & ChainGPT-style keys** stay server-side on the agent; the browser never sees them.
 
 ## Grant & Delegation Flow
@@ -273,9 +291,11 @@ OpenAI-compatible client. `veniceChat` powers research/copywriting/translation; 
 ```text
 Permissions  ┃ @metamask/delegation-toolkit 0.13 (ERC-7710 / ERC-7702)
              ┃ DelegationManager + caveat enforcers (MetaMask-deployed)
+TEE Sandbox  ┃ Terminal 3 SDK / ADK (WASM Secure Enclaves & jco compiling)
 Wallet/chain ┃ RainbowKit 2.2, wagmi 2.x, viem — Base Sepolia (84532)
 AI           ┃ Venice AI (OpenAI-compatible — text + image)
 Payments     ┃ x402 (402 → pay → retry) · 1Shot Permissionless Relayer (gated)
+CLI Tool     ┃ Commander, esbuild, node-fetch (packages/cli)
 Frontend     ┃ Next.js 15, React 19, Tailwind 3, Lenis, Framer Motion
 Agent        ┃ Hono, @hono/node-server, tsx, Node 20+
 Shared       ┃ TypeScript domain contract (@concierge/shared)
@@ -289,7 +309,7 @@ bount-AI/
 ├── apps/
 │   ├── web/                        # Next.js 15 frontend
 │   │   └── src/
-│   │       ├── app/                # / · /app · /app/chat · /app/agents
+│   │       ├── app/                # / · /login · /app · /app/chat · /app/agents · /app/cli-auth
 │   │       ├── components/         # one concern per file (+ landing/, ui/)
 │   │       │   └── GrantBudgetModal.tsx
 │   │       └── lib/
@@ -310,7 +330,9 @@ bount-AI/
 │           ├── routes/             # plan · spike · seller (mock) · webhook
 │           ├── spike.ts            # orchestrator
 │           └── shared.ts           # agent-side types + CAPABILITIES copy
-├── packages/shared/                # shared domain types + capability registry
+├── packages/
+│   ├── shared/                     # shared domain types + capability registry
+│   └── cli/                        # local npx skill CLI implementation
 ├── CONTEXT.md · PROJECT.md · UI_GUIDE.md · CLAUDE.md
 ├── README.md                       # ← you are here
 └── LICENSE
@@ -363,12 +385,38 @@ pnpm dev:web      # web only   → http://localhost:3000
 pnpm dev:agent    # agent only → http://localhost:8787
 ```
 
-### 4. End-to-end walkthrough
+### 4. End-to-end walkthrough (Web Marketplace)
 
-1. **`/app`** → connect wallet (Base Sepolia) → **Grant budget** → sign the spending limit in MetaMask.
-2. **`/app/chat`** → send *"research the coffee market and write a short summary"*.
-3. Watch the budget meter decrement; the right panel fills with generated output + history.
-4. **`/app/agents`** → create a custom agent and watch the concierge pick it.
+1. **`/login`** → Connect wallet (Base Sepolia) → Choose **Buyer** or **Seller** role and authorize your EIP-191 session.
+2. **Buyer Flow:**
+   * Navigate to `/app` (Dashboard) → click **Grant Budget** → sign the spending limit in MetaMask.
+   * Go to `/app/chat` → send a prompt like *"research the coffee market and write a short summary"*.
+   * Watch the budget meter decrement in real-time. Results will render alongside delegation audit proofs.
+3. **Seller Flow:**
+   * Navigate to `/app` → check your **Total Earnings** and list of custom published TEE skills.
+   * Go to `/app/agents` → click **Create Agent** to register a new specialist in the global catalog.
+
+### 5. CLI Tool Walkthrough (`npx skill`)
+
+bount-AI provides a local developer CLI allowing you to build and run skills inside secure TEE enclaves:
+
+1. **Login:** Run `pnpm --filter @concierge/cli login` (or compile and run locally). This spawns a local server and redirects you to `/app/cli-auth` to authorize your terminal via wallet signature.
+2. **Initialize:** Bootstrap a new custom TypeScript skill:
+   ```bash
+   npx skill init my-premium-summarizer
+   ```
+3. **Build:** Compile your TypeScript skill to a WebAssembly (WASM) binary using standard `jco` and `wasi-js` TEE tooling:
+   ```bash
+   npx skill build
+   ```
+4. **Publish:** Upload your compiled WASM skill to the bount-AI registry:
+   ```bash
+   npx skill publish
+   ```
+5. **Run:** Run your secure TEE skill from the terminal, triggering the x402 payment flow under the hood:
+   ```bash
+   npx skill run my-premium-summarizer --prompt "Summarize competitor pricing"
+   ```
 
 ### Scripts
 
