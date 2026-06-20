@@ -6,28 +6,53 @@ import { CornerFrame } from "@/components/CornerFrame";
 import { useState, Suspense } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useEffect } from "react";
 
 function CliAuthContent() {
   const searchParams = useSearchParams();
   const port = searchParams?.get("port") || "12345";
-  const { address, isConnected } = useAccount();
+  const { address: wagmiAddress, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const [status, setStatus] = useState<"idle" | "signing" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [sessionApiKey, setSessionApiKey] = useState("");
+  const [sessionAddress, setSessionAddress] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("bountai.session");
+      if (raw) {
+        const session = JSON.parse(raw);
+        setSessionApiKey(session.apiKey || "");
+        setSessionAddress(session.address || "");
+      }
+    } catch {}
+  }, []);
+
+  const activeAddress = wagmiAddress || sessionAddress || "";
+  const hasSessionKey = !!sessionApiKey;
 
   async function handleAuthorize() {
-    if (!address) return;
+    if (!activeAddress) return;
     setStatus("signing");
     setErrorMsg(null);
     try {
-      const challenge = `bount-AI: Authorize local CLI session\nAddress: ${address}\nTimestamp: ${Date.now()}`;
-      const signature = await signMessageAsync({ message: challenge });
+      const challenge = `bount-AI: Authorize local CLI session\nAddress: ${activeAddress}\nTimestamp: ${Date.now()}`;
+      
+      let signature = "";
+      if (sessionApiKey) {
+        const { privateKeyToAccount } = await import("viem/accounts");
+        const account = privateKeyToAccount(sessionApiKey as `0x${string}`);
+        signature = await account.signMessage({ message: challenge });
+      } else {
+        signature = await signMessageAsync({ message: challenge });
+      }
 
       setStatus("sending");
       
       const payload = {
-        did: `did:t3n:${address.toLowerCase()}`,
-        authToken: `mock_jwt_token_${signature}`
+        did: `did:t3n:${activeAddress.toLowerCase().replace(/^0x/, "")}`,
+        authToken: `mock_jwt_token_preauth_${sessionApiKey || "demo"}`
       };
 
       const res = await fetch(`http://localhost:${port}/callback`, {
@@ -64,7 +89,11 @@ function CliAuthContent() {
           </div>
           <div className="mt-1 flex justify-between">
             <span>Identity:</span>
-            <span className="text-ink">{address ? `did:t3n:${address.slice(0, 6)}...${address.slice(-4)}` : "Disconnected"}</span>
+            <span className="text-ink">
+              {activeAddress
+                ? `did:t3n:${activeAddress.toLowerCase().replace(/^0x/, "")}`
+                : "Disconnected"}
+            </span>
           </div>
         </div>
 
@@ -74,9 +103,13 @@ function CliAuthContent() {
             <p className="mt-1.5 text-xs text-ink-muted">You can close this browser tab and return to your terminal.</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4">
-            {!isConnected ? (
-              <ConnectButton />
+          <div className="flex flex-col items-center gap-4 w-full">
+            {!isConnected && !hasSessionKey ? (
+              <div className="flex flex-col items-center gap-3 w-full">
+                <ConnectButton />
+                <span className="text-[10px] font-mono text-ink-faint uppercase">Or</span>
+                <p className="text-xs text-ink-muted text-center">Log in to bount-AI web app via T3N DID first.</p>
+              </div>
             ) : (
               <button
                 onClick={handleAuthorize}
