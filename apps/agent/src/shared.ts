@@ -44,6 +44,7 @@ export interface AgentOutput {
   label: string;
   type: "text" | "image";
   text?: string;
+  content?: string;
   imageUrl?: string;
 }
 
