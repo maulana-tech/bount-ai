@@ -43,7 +43,7 @@ async function veniceSelect(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "z-ai-glm-5-turbo",
+      model: config.venice.model,
       messages: [
         { role: "system", content: system },
         { role: "user", content: request },
