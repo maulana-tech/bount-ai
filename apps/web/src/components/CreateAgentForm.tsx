@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import type { Capability } from "@concierge/shared";
 import { CornerFrame } from "./CornerFrame";
@@ -18,7 +18,22 @@ export function CreateAgentForm({
   onCreated: (list: Capability[]) => void;
   onCancel: () => void;
 }) {
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
+  const [sessionAddress, setSessionAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("bountai.session");
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session.address) {
+          setSessionAddress(session.address);
+        }
+      }
+    } catch {}
+  }, []);
+
+  const address = wagmiAddress || sessionAddress || "";
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState("");
