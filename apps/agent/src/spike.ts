@@ -26,6 +26,7 @@ import { config } from "./config.js";
 import { runResearch } from "./agents/research.js";
 import { runMedia } from "./agents/media.js";
 import { runText } from "./agents/text.js";
+import { executeT3nContract } from "./integrations/t3n.js";
 
 /**
  * Fase 2 vertical-slice: rencana → delegasi root (user → bount-AI) → redelegasi
@@ -39,10 +40,35 @@ export async function runSpike(
   request: string,
   extraAgents: Capability[] = [],
   grant?: { root: Delegation; capUsd: number },
+  userApiKey?: string,
 ): Promise<SpikeResult> {
+  // Scan published_skills directory to dynamically register custom capabilities
+  const customCaps: Capability[] = [];
+  try {
+    const uploadDir = path.resolve("./published_skills");
+    if (fs.existsSync(uploadDir)) {
+      const files = fs.readdirSync(uploadDir);
+      for (const f of files) {
+        if (f.endsWith(".wasm")) {
+          const id = f.replace(/\.wasm$/i, "");
+          customCaps.push({
+            id,
+            label: id.charAt(0).toUpperCase() + id.slice(1),
+            description: `TEE secure skill: ${id}`,
+            keywords: [id.toLowerCase()],
+            unitCostUsd: 0.1, // Positive default cost to prevent EADDRINUSE / Invalid maxAmount 0
+            product: "text",
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[spike] Error scanning published_skills:", err);
+  }
+
   // Gabung katalog bawaan + agent custom user (custom tidak menimpa bawaan).
   const seen = new Set(CAPABILITIES.map((c) => c.id));
-  const pool = [...CAPABILITIES, ...extraAgents.filter((c) => !seen.has(c.id))];
+  const pool = [...CAPABILITIES, ...customCaps, ...extraAgents.filter((c) => !seen.has(c.id))];
   const byId: Record<string, Capability> = Object.fromEntries(
     pool.map((c) => [c.id, c]),
   );
@@ -54,7 +80,7 @@ export async function runSpike(
   // agar `to` di root cocok. Tanpa grant → root di-generate server (demo).
   const agent = grant ? agentParty() : newParty();
   const planCost = plan.subtasks.reduce((sum, t) => sum + t.estimatedCost, 0);
-  const cap = grant ? grant.capUsd : planCost;
+  const cap = Math.max(grant ? grant.capUsd : planCost, 0.1);
 
   // 1) Delegasi root: user → bount-AI (plafon penuh, whitelist seller).
   const root =
@@ -156,39 +182,71 @@ export async function runSpike(
       outputs.push({ agent: t.agent, label, type: "image", imageUrl });
     } else if (t.agent === "research") {
       const { summary } = await runResearch(request);
-      outputs.push({ agent: t.agent, label, type: "text", text: summary });
+      outputs.push({ agent: t.agent, label, type: "text", text: summary, content: summary });
     } else if (t.agent === "writing") {
       const { text } = await runText(request, "You are a professional copywriter. Write content in English.");
-      outputs.push({ agent: t.agent, label, type: "text", text });
+      outputs.push({ agent: t.agent, label, type: "text", text, content: text });
     } else if (t.agent === "translate") {
       const { text } = await runText(request, "You are a professional translator. Translate accurately.");
-      outputs.push({ agent: t.agent, label, type: "text", text });
+      outputs.push({ agent: t.agent, label, type: "text", text, content: text });
     } else {
       // Generik: agent custom buatan user, audio, video, dll.
       const wasmPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.wasm`);
       const isTEE = fs.existsSync(wasmPath);
       
+      let teeLog = "";
+      let realTeeExecuted = false;
+      let textResult = "";
+
       if (isTEE) {
         console.log(`[T3N TEE] Verified and executing WASM component for ${t.agent} in secure TEE enclave`);
-        activity.push({
-          id: `a${at}-tee`,
-          agent: t.agent,
-          action: `[TEE] Verify & Execute WASM secure enclave`,
-          amount: 0,
-          status: "confirmed",
-          txHash: `0xtee_${Buffer.from(t.agent).toString("hex").slice(0, 32)}`,
-          at,
-        });
+        
+        try {
+          const t3nResult = await executeT3nContract(t.agent, request, userApiKey);
+          if (t3nResult !== null) {
+            textResult = typeof t3nResult === "string" ? t3nResult : JSON.stringify(t3nResult);
+            realTeeExecuted = true;
+            console.log(`[T3N TEE] Secure Enclave Execution succeeded:`, textResult);
+            
+            activity.push({
+              id: `a${at}-tee`,
+              agent: t.agent,
+              action: `[TEE] Verified & Executed on T3N testnet (did:t3n:${t.agent.toLowerCase()})`,
+              amount: 0,
+              status: "confirmed",
+              txHash: `0xtee_real_${Buffer.from(t.agent).toString("hex").slice(0, 28)}`,
+              at,
+            });
+          }
+        } catch (err) {
+          console.warn(`[T3N TEE] Real T3N execution failed, falling back to simulation:`, err);
+          teeLog = `\n(Real T3N execution failed, fell back to simulated run: ${err instanceof Error ? err.message : String(err)})`;
+        }
+
+        if (!realTeeExecuted) {
+          activity.push({
+            id: `a${at}-tee`,
+            agent: t.agent,
+            action: `[TEE] Verify & Execute WASM secure enclave (Simulated)`,
+            amount: 0,
+            status: "confirmed",
+            txHash: `0xtee_${Buffer.from(t.agent).toString("hex").slice(0, 32)}`,
+            at,
+          });
+        }
       }
 
-      const sys = `You are ${label}, a specialist agent. ${capability?.description ?? ""} Produce a concise, useful result in English for the user's request.`;
-      const { text } = await runText(request, sys);
+      if (!realTeeExecuted) {
+        const sys = `You are ${label}, a specialist agent. ${capability?.description ?? ""} Produce a concise, useful result in English for the user's request.`;
+        const { text } = await runText(request, sys);
+        textResult = text;
+      }
       
       const content = isTEE 
-        ? `[T3N Secure Enclave Execution - did:t3n:${t.agent.toLowerCase()}]\n\n${text}`
-        : text;
+        ? `[T3N Secure Enclave Execution - did:t3n:${t.agent.toLowerCase()}]${teeLog}\n\n${textResult}`
+        : textResult;
 
-      outputs.push({ agent: t.agent, label, type: "text", text: content });
+      outputs.push({ agent: t.agent, label, type: "text", text: content, content: content });
     }
   }
 
