@@ -1,6 +1,6 @@
 import { config } from "../config.js";
 
-const MODEL = "z-ai-glm-5-turbo";
+const MODEL = config.venice.model;
 
 /**
  * Klien Venice AI (OpenAI-compatible). Dipakai Concierge untuk merencanakan
