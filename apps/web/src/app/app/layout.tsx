@@ -25,13 +25,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           return;
         }
 
-        // If wallet is connected, verify it matches the session address
-        if (address && session.address.toLowerCase() !== address.toLowerCase()) {
-          localStorage.removeItem("bountai.session");
-          router.push(`/login?redirect=${encodeURIComponent(pathname || "/app")}`);
-          return;
-        }
-
         setAuthorized(true);
       } catch (err) {
         localStorage.removeItem("bountai.session");
