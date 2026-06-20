@@ -32,11 +32,10 @@ export const config = {
   venice: {
     apiKey: process.env.VENICE_API_KEY ?? "",
     baseUrl: process.env.VENICE_BASE_URL ?? "https://api.venice.ai/api/v1",
+    model: process.env.VENICE_MODEL ?? "openai-gpt-4o-mini-2024-07-18",
   },
-  oneshot: {
-    apiKey: process.env.ONESHOT_API_KEY ?? "",
-    webhookSecret: process.env.ONESHOT_WEBHOOK_SECRET ?? "",
-    /** JSON-RPC relayer URL — kalau kosong, panggilan 1Shot di-gate. */
-    relayerUrl: process.env.ONESHOT_RELAYER_URL ?? "",
+  t3n: {
+    apiKey: process.env.T3N_API_KEY ?? "",
+    environment: process.env.T3N_ENVIRONMENT ?? "testnet",
   },
 } as const;
