@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import type { Delegation } from "@metamask/delegation-toolkit";
 import type { Capability } from "../shared.js";
 import { runSpike } from "../spike.js";
-import { getCapabilities } from "../integrations/oneshot.js";
 import { agentIdentity } from "../integrations/delegation.js";
 import { SELLER } from "./seller.js";
 
@@ -62,6 +61,7 @@ export const spikeRoute = new Hono()
         capabilities?: unknown;
         rootDelegation?: unknown;
         cap?: unknown;
+        apiKey?: string;
       }>()
       .catch(() => ({}) as Record<string, unknown>);
     const request =
@@ -75,17 +75,26 @@ export const spikeRoute = new Hono()
         ? { root, capUsd: Math.min(capUsd, 1000) }
         : undefined;
 
+    const authHeader = c.req.header("Authorization") || "";
+    let apiKey = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (apiKey.startsWith("mock_jwt_token_preauth_")) {
+      apiKey = apiKey.replace("mock_jwt_token_preauth_", "");
+    }
+    if (!apiKey && typeof body.apiKey === "string") {
+      apiKey = body.apiKey;
+    }
+
     const result = await runSpike(
       request,
       sanitizeAgents(body.capabilities),
       grant,
+      apiKey || undefined,
     );
     return c.json(result);
   })
   // GET /spike/agent — identitas delegate agent untuk membangun grant di client.
   .get("/agent", (c) => c.json({ ...agentIdentity(), seller: SELLER }))
-  // GET /spike/capabilities — probe 1Shot relayer (null bila belum dikonfigurasi).
-  .get("/capabilities", async (c) => {
-    const caps = await getCapabilities();
-    return c.json({ configured: caps !== null, capabilities: caps });
+  // GET /spike/capabilities — disabled (1Shot removed)
+  .get("/capabilities", (c) => {
+    return c.json({ configured: false, capabilities: null });
   });
