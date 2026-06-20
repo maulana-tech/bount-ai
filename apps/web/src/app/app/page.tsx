@@ -25,11 +25,13 @@ const GrantBudgetModal = dynamic(
 export default function Page() {
   const router = useRouter();
   const { cap, spent, activity, revoke, granted, usage } = useBudget();
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
   const [grantOpen, setGrantOpen] = useState(false);
   const [custom, setCustom] = useState<Capability[]>([]);
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sessionAddress, setSessionAddress] = useState<string | null>(null);
+  const [sessionDid, setSessionDid] = useState<string | null>(null);
 
   useEffect(() => {
     setCustom(getCustomAgents());
@@ -40,11 +42,20 @@ export default function Page() {
         if (session.role === "buyer" || session.role === "seller") {
           setRole(session.role);
         }
+        if (session.address) {
+          setSessionAddress(session.address);
+        }
+        if (session.did) {
+          setSessionDid(session.did);
+        }
       } catch {
         // Ignore
       }
     }
   }, []);
+
+  const address = wagmiAddress || sessionAddress || "";
+  const did = sessionDid || (address ? `did:t3n:${address.toLowerCase().replace("0x", "")}` : "");
 
   const handleLogout = () => {
     localStorage.removeItem("bountai.session");
@@ -142,8 +153,19 @@ export default function Page() {
             <h1 className="text-2xl font-semibold tracking-tight capitalize text-ink">
               {role === "buyer" ? "Buyer Dashboard" : "Seller Dashboard"}
             </h1>
-            <p className="mt-1 text-xs text-ink-muted leading-relaxed">
-              Account: <code className="font-mono text-[11px] bg-panel px-1.5 py-0.5 rounded text-ink">{address?.slice(0, 6)}…{address?.slice(-4)}</code>
+            <p className="mt-1.5 text-xs text-ink-muted leading-relaxed flex items-center gap-2 flex-wrap">
+              <span>Account:</span>
+              <code className="font-mono text-[11px] bg-panel px-1.5 py-0.5 rounded text-ink">
+                {address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "Disconnected"}
+              </code>
+              {did && (
+                <>
+                  <span className="text-ink-faint">|</span>
+                  <span className="font-mono text-[10px] text-ink-muted bg-gold-tint border border-gold/20 px-1.5 py-0.5 rounded">
+                    {did}
+                  </span>
+                </>
+              )}
             </p>
           </div>
           
