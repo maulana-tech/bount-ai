@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { planRoute } from "./routes/plan.js";
-import { webhookRoute } from "./routes/webhook.js";
 import { sellerRoute } from "./routes/seller.js";
 import { spikeRoute } from "./routes/spike.js";
+import { registerT3nContract, getT3nClients } from "./integrations/t3n.js";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -16,9 +16,23 @@ app.onError((err, c) => {
 });
 app.get("/health", (c) => c.json({ ok: true, service: "concierge-agent" }));
 app.route("/plan", planRoute);
-app.route("/webhook", webhookRoute);
 app.route("/seller", sellerRoute);
 app.route("/spike", spikeRoute);
+
+app.post("/auth/session", async (c) => {
+  try {
+    const { apiKey } = await c.req.json().catch(() => ({}));
+    const clients = await getT3nClients(apiKey || undefined);
+    if (!clients) {
+      return c.json({ error: "Failed to initialize T3N client. Please check your T3N API Key." }, 400);
+    }
+    const did = clients.tenantDid;
+    const address = did.replace("did:t3n:", "");
+    return c.json({ status: "ok", did, address });
+  } catch (err: any) {
+    return c.json({ error: err.message || "Failed to authenticate session" }, 500);
+  }
+});
 
 app.post("/publish-skill", async (c) => {
   const body = await c.req.json();
@@ -43,10 +57,23 @@ app.post("/publish-skill", async (c) => {
 
   console.log(`[T3N TEE] Registered skill "${name}" for DID ${did} at enclave ${enclaveAddress}`);
 
+  // Call real T3N registration if credentials available
+  let t3nContractId: string | null = null;
+  try {
+    const reg = await registerT3nContract(name, wasmBuffer);
+    if (reg) {
+      t3nContractId = reg.contractId;
+      console.log(`[T3N TEE] Real enclave contract registered with ID ${t3nContractId}`);
+    }
+  } catch (err) {
+    console.warn(`[T3N TEE] Real T3N registration failed, proceeding with mock:`, err);
+  }
+
   return c.json({
     status: "ok",
     enclaveAddress,
-    did: `did:t3n:${name.toLowerCase()}`
+    did: `did:t3n:${name.toLowerCase()}`,
+    ...(t3nContractId ? { t3nContractId } : {})
   });
 });
 
