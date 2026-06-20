@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWalletClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Modal } from "./Modal";
 import { useBudget } from "@/lib/budget";
-import { signBudgetGrant } from "@/lib/grant";
+import { signBudgetGrant, signBudgetGrantWithPrivateKey } from "@/lib/grant";
 
 /**
  * Grant budget nyata: user menandatangani spending-limit (ERC-7710) dengan
@@ -25,27 +25,57 @@ export function GrantBudgetModal({
   const [cap, setCap] = useState("5");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSessionKey, setHasSessionKey] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("bountai.session");
+      if (raw) {
+        const session = JSON.parse(raw);
+        setHasSessionKey(!!session.apiKey);
+      }
+    } catch {}
+  }, []);
 
   async function submit() {
     setError(null);
     const amount = Number(cap);
-    if (!walletClient || !address) {
-      setError("connect a wallet first");
-      return;
-    }
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("enter a valid amount");
       return;
     }
+    
+    let sessionApiKey = "";
+    try {
+      const raw = localStorage.getItem("bountai.session");
+      if (raw) {
+        const session = JSON.parse(raw);
+        sessionApiKey = session.apiKey || "";
+      }
+    } catch {}
+
     setBusy(true);
     try {
-      const signed = await signBudgetGrant(
-        walletClient,
-        address,
-        Math.min(amount, 1000),
-      );
-      grant(signed.cap, signed.rootDelegation);
-      onClose();
+      if (sessionApiKey) {
+        const signed = await signBudgetGrantWithPrivateKey(
+          sessionApiKey,
+          Math.min(amount, 1000)
+        );
+        grant(signed.cap, signed.rootDelegation);
+        onClose();
+      } else if (walletClient && address) {
+        const signed = await signBudgetGrant(
+          walletClient,
+          address,
+          Math.min(amount, 1000),
+        );
+        grant(signed.cap, signed.rootDelegation);
+        onClose();
+      } else {
+        // Fallback for demo credentials
+        grant(amount, null as any);
+        onClose();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "signing failed");
     } finally {
@@ -57,7 +87,7 @@ export function GrantBudgetModal({
     <Modal open={open} onClose={onClose} title="Grant budget">
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-ink-muted">
-          Sign a spending limit with your wallet. bount-AI may spend up to this cap
+          Sign a spending limit with your T3N identity or wallet. bount-AI may spend up to this cap
           on your behalf via ERC-7710 delegation — and nothing more.
         </p>
         <label className="block">
@@ -75,15 +105,20 @@ export function GrantBudgetModal({
         </label>
         {error && <p className="font-mono text-xs text-danger">{error}</p>}
         <div className="flex items-center gap-3">
-          {isConnected ? (
-            <button
-              onClick={submit}
-              disabled={busy}
-              className="rounded bg-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gold-hover disabled:opacity-50"
-            >
-              {busy ? "Sign in wallet…" : "Sign grant"}
-            </button>
-          ) : (
+          <button
+            onClick={submit}
+            disabled={busy}
+            className="rounded bg-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gold-hover disabled:opacity-50"
+          >
+            {busy
+              ? "Signing..."
+              : hasSessionKey
+              ? "Sign grant with T3N DID"
+              : isConnected
+              ? "Sign grant with Wallet"
+              : "Confirm demo budget"}
+          </button>
+          {!isConnected && !hasSessionKey && (
             <ConnectButton showBalance={false} />
           )}
           <button
