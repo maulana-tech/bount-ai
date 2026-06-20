@@ -6,6 +6,8 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 
+import { useEffect, useState } from "react";
+
 /**
  * Satu navbar, dua varian:
  * - "landing": tautan section + CTA "Open app".
@@ -15,6 +17,19 @@ import { cn } from "@/lib/utils";
  */
 export function Navbar({ variant }: { variant: "landing" | "app" }) {
   const pathname = usePathname();
+  const [sessionAddress, setSessionAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("bountai.session");
+    if (raw) {
+      try {
+        const session = JSON.parse(raw);
+        if (session.address) {
+          setSessionAddress(session.address);
+        }
+      } catch {}
+    }
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-sm">
@@ -55,6 +70,11 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
         ) : (
           <div className="flex items-center gap-4">
             <NavLink href="/">Back to site</NavLink>
+            {sessionAddress && (
+              <span className="border border-gold/40 bg-gold-tint px-2.5 py-1.5 font-mono text-[11px] rounded text-gold leading-none select-none">
+                T3N: {sessionAddress.slice(0, 6)}…{sessionAddress.slice(-4)}
+              </span>
+            )}
             <ConnectButton showBalance={false} />
           </div>
         )}
