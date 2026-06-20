@@ -19,12 +19,22 @@ export async function runSpike(
   capabilities: Capability[] = [],
   grant?: SpikeGrant,
 ): Promise<SpikeResult> {
+  const raw = typeof window !== "undefined" ? localStorage.getItem("bountai.session") : null;
+  let apiKey: string | undefined;
+  if (raw) {
+    try {
+      const session = JSON.parse(raw);
+      if (session.apiKey) apiKey = session.apiKey;
+    } catch {}
+  }
+
   const res = await fetch(`${AGENT_URL}/spike`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       request,
       capabilities,
+      ...(apiKey ? { apiKey } : {}),
       ...(grant
         ? { rootDelegation: grant.rootDelegation, cap: grant.cap }
         : {}),
