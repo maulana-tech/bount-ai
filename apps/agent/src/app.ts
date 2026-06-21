@@ -85,19 +85,26 @@ app.post("/publish-skill", async (c) => {
 
 app.post("/auth/kv/create", async (c) => {
   try {
-    const { apiKey, tail, enclaveAddress } = await c.req.json().catch(() => ({}));
+    const { apiKey, tail, contractId, enclaveAddress } = await c.req.json().catch(() => ({}));
     const clients = await getT3nClients(apiKey || undefined);
     if (!clients) {
       return c.json({ error: "Failed to initialize T3N client. Check your T3N API Key." }, 400);
     }
-    const contractId = enclaveAddress || "0x9a506280aae6c867f2e8631ade675fa7e76d20d5";
     
-    console.log(`[T3N SDK] Creating map tail "${tail}" for enclave contract ${contractId}...`);
+    // Parse contractId or enclaveAddress as a u32 number.
+    const rawId = contractId || enclaveAddress || "1";
+    let numericId = parseInt(rawId, 10);
+    if (isNaN(numericId) || numericId < 0 || numericId > 4294967295) {
+      console.warn(`[T3N SDK] Invalid contract ID "${rawId}" (expected u32), falling back to 1`);
+      numericId = 1;
+    }
+
+    console.log(`[T3N SDK] Creating map tail "${tail}" for enclave contract ID ${numericId}...`);
     const map = await clients.tenant.maps.create({
       tail: tail,
       visibility: "private",
-      writers: { only: [contractId] },
-      readers: { only: [contractId] }
+      writers: { only: [numericId] },
+      readers: { only: [numericId] }
     });
     return c.json({ status: "ok", map });
   } catch (err: any) {
