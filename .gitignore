@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
+
+# rust / wasm enclave build output
+packages/enclaves/target/
+packages/enclaves/dist/

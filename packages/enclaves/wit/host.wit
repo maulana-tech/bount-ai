@@ -1,0 +1,25 @@
+// T3N host capabilities provided to the enclave by the node runtime.
+//
+// NOTE: these signatures are ASSUMED. The real WIT contract for `t3n:host`
+// ships with the T3N ADK and is not yet vendored into this repo. Confirm the
+// actual signatures against the T3N ADK docs/SDK and adjust only this file —
+// the rest of the enclave imports from here.
+package t3n:host;
+
+/// Confidential key/value store. Used to read secrets (e.g. the Venice API
+/// key) from a private namespace such as "z:<tid>:secrets" without the value
+/// ever being embedded in the WASM binary or passed in from untrusted JS.
+interface kv {
+    get: func(namespace: string, key: string) -> result<option<string>, string>;
+}
+
+/// Confidential outbound HTTP, performed by the node on the enclave's behalf so
+/// the request never leaves the trusted boundary in plaintext to the client.
+interface http {
+    request: func(
+        method: string,
+        url: string,
+        headers: list<tuple<string, string>>,
+        body: option<string>,
+    ) -> result<string, string>;
+}
