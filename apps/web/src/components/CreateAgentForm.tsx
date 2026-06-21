@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
 import type { Capability } from "@concierge/shared";
 import { CornerFrame } from "./CornerFrame";
 import { addCustomAgent, makeAgentId } from "@/lib/customAgents";
@@ -18,7 +17,6 @@ export function CreateAgentForm({
   onCreated: (list: Capability[]) => void;
   onCancel: () => void;
 }) {
-  const { address: wagmiAddress } = useAccount();
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,7 +31,7 @@ export function CreateAgentForm({
     } catch {}
   }, []);
 
-  const address = wagmiAddress || sessionAddress || "";
+  const address = sessionAddress || "";
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState("");
@@ -118,10 +116,10 @@ export function CreateAgentForm({
               <span className="text-ink-muted">
                 {address.slice(0, 6)}…{address.slice(-4)}
               </span>{" "}
-              — others pay this wallet when they use your agent
+              — others pay this T3N address when they use your agent
             </>
           ) : (
-            "connect a wallet to earn when others use this agent (optional)"
+            "No active T3N session found."
           )}
         </p>
         <div className="flex items-center gap-3 pt-1">
