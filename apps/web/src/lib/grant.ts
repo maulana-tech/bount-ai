@@ -16,7 +16,7 @@ import { baseSepolia } from "viem/chains";
  * store dan dikirim ke `/spike` sebagai root; agent meredelegasi ke specialist dari situ.
  */
 
-const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
+const AGENT_URL = (process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787").replace(/\/$/, "");
 
 export interface AgentIdentity {
   address: Address;
