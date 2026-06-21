@@ -18,8 +18,8 @@ export async function selectCapabilities(
   if (config.venice.apiKey) {
     try {
       return await veniceSelect(request, pool);
-    } catch {
-      // fallback ke heuristik kalau Venice error
+    } catch (err) {
+      console.warn("[selectCapabilities] Venice selection failed, falling back to heuristics:", err);
     }
   }
   return heuristicSelect(request, pool);
@@ -57,7 +57,10 @@ async function veniceSelect(
     choices: { message: { content: string } }[];
   };
   const text = data.choices?.[0]?.message?.content ?? "";
-  const ids: string[] = JSON.parse(text);
+  console.log("[Venice Select] Raw response:", text);
+
+  const cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+  const ids: string[] = JSON.parse(cleanedText);
   const byId = new Map(pool.map((c) => [c.id, c]));
   return ids.map((id) => byId.get(id)).filter(Boolean) as Capability[];
 }
