@@ -1,7 +1,7 @@
 import type { Capability, SpikeResult } from "@concierge/shared";
 import type { SerializedDelegation } from "./grant";
 
-const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
+const AGENT_URL = (process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787").replace(/\/$/, "");
 
 export interface SpikeGrant {
   rootDelegation: SerializedDelegation;
