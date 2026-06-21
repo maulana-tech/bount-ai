@@ -12,7 +12,6 @@ import { useBudget } from "@/lib/budget";
 import { getCustomAgents, removeCustomAgent } from "@/lib/customAgents";
 import { CAPABILITIES, type Capability } from "@concierge/shared";
 import { usd, cn } from "@/lib/utils";
-import { useAccount } from "wagmi";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { useRouter } from "next/navigation";
 import { T3nSecretsManager } from "@/components/T3nSecretsManager";
@@ -26,7 +25,6 @@ const GrantBudgetModal = dynamic(
 export default function Page() {
   const router = useRouter();
   const { cap, spent, activity, revoke, granted, usage } = useBudget();
-  const { address: wagmiAddress } = useAccount();
   const [grantOpen, setGrantOpen] = useState(false);
   const [custom, setCustom] = useState<Capability[]>([]);
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
@@ -55,7 +53,7 @@ export default function Page() {
     }
   }, []);
 
-  const address = wagmiAddress || sessionAddress || "";
+  const address = sessionAddress || "";
   const did = sessionDid || (address ? `did:t3n:${address.toLowerCase().replace("0x", "")}` : "");
 
   const handleLogout = () => {
