@@ -15,7 +15,26 @@ function reviveDelegation(raw: unknown): Delegation | null {
   const o = raw as Record<string, unknown>;
   if (typeof o.delegate !== "string" || typeof o.delegator !== "string") return null;
   if (typeof o.signature !== "string" || !Array.isArray(o.caveats)) return null;
-  return o as unknown as Delegation;
+  
+  const scope = o.scope as any;
+  const parsedScope = scope
+    ? {
+        ...scope,
+        maxAmount: typeof scope.maxAmount === "string" || typeof scope.maxAmount === "number"
+          ? BigInt(scope.maxAmount)
+          : scope.maxAmount
+      }
+    : undefined;
+
+  return {
+    delegate: o.delegate,
+    delegator: o.delegator,
+    authority: (o.authority as string) || "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    salt: (o.salt as string) || "0x",
+    signature: o.signature,
+    caveats: o.caveats as any[],
+    scope: parsedScope,
+  } as unknown as Delegation;
 }
 
 /** Sanitasi agent custom yang dikirim klien (jangan percaya input mentah). */
