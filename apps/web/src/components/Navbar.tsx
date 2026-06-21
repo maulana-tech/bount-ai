@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +11,7 @@ import { useEffect, useState } from "react";
  * Satu navbar, dua varian:
  * - "landing": tautan section + CTA "Open app".
  * - "app": navigasi antar halaman app (Dashboard, Agents) + jalur balik ke
- *   landing ("Back to site") + wallet connect.
+ *   landing ("Back to site") + T3N session status & action.
  * Logo selalu menautkan ke beranda, jadi kedua arah selalu punya navigasi.
  */
 export function Navbar({ variant }: { variant: "landing" | "app" }) {
@@ -30,6 +29,11 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
       } catch {}
     }
   }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("bountai.session");
+    window.location.href = "/login";
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-sm">
@@ -75,7 +79,21 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
                 T3N: {sessionAddress.slice(0, 6)}…{sessionAddress.slice(-4)}
               </span>
             )}
-            <ConnectButton showBalance={false} />
+            {sessionAddress ? (
+              <button
+                onClick={handleSignOut}
+                className="rounded border border-line bg-panel px-3.5 py-1.5 text-xs font-semibold text-ink-muted hover:text-ink hover:border-line-strong transition-colors"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded bg-gold px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gold-hover"
+              >
+                Log In
+              </Link>
+            )}
           </div>
         )}
       </div>
