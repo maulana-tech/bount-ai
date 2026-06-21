@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { CornerFrame } from "./CornerFrame";
 
-const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
+const AGENT_URL = (process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787").replace(/\/$/, "");
 
 export function T3nSecretsManager() {
   const [tail, setTail] = useState("secrets");
