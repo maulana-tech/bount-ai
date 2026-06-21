@@ -1,0 +1,13 @@
+package t3n:enclave;
+
+interface contracts {
+    execute: func(input: string) -> result<string, string>;
+}
+
+world enclave {
+    // Confidential host capabilities (see wit/host.wit).
+    import t3n:host/kv;
+    import t3n:host/http;
+
+    export contracts;
+}

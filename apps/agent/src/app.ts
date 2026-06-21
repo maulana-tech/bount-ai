@@ -36,11 +36,13 @@ app.post("/auth/session", async (c) => {
 
 app.post("/publish-skill", async (c) => {
   const body = await c.req.json();
-  const { name, did, wasmBase64 } = body;
-  
+  const { name, did, wasmBase64, version } = body;
+
   if (!name || !did || !wasmBase64) {
     return c.json({ error: "Missing required fields: name, did, wasmBase64" }, 400);
   }
+
+  const contractVersion = typeof version === "string" && version.trim() ? version.trim() : "0.1.0";
 
   const uploadDir = path.resolve("./published_skills");
   if (!fs.existsSync(uploadDir)) {
@@ -55,12 +57,12 @@ app.post("/publish-skill", async (c) => {
   const hash = crypto.createHash("sha256").update(wasmBuffer).digest("hex");
   const enclaveAddress = `0x${hash.slice(0, 40)}`;
 
-  console.log(`[T3N TEE] Registered skill "${name}" for DID ${did} at enclave ${enclaveAddress}`);
+  console.log(`[T3N TEE] Registered skill "${name}" v${contractVersion} for DID ${did} at enclave ${enclaveAddress}`);
 
   // Call real T3N registration if credentials available
   let t3nContractId: string | null = null;
   try {
-    const reg = await registerT3nContract(name, wasmBuffer);
+    const reg = await registerT3nContract(name, wasmBuffer, contractVersion);
     if (reg) {
       t3nContractId = reg.contractId;
       console.log(`[T3N TEE] Real enclave contract registered with ID ${t3nContractId}`);
@@ -72,6 +74,7 @@ app.post("/publish-skill", async (c) => {
   return c.json({
     status: "ok",
     enclaveAddress,
+    version: contractVersion,
     did: `did:t3n:${name.toLowerCase()}`,
     ...(t3nContractId ? { t3nContractId } : {})
   });
