@@ -2,12 +2,10 @@
 
 import { useEffect, useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAccount } from "wagmi";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { address, isConnected } = useAccount();
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
@@ -33,7 +31,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
-  }, [address, isConnected, router, pathname]);
+  }, [router, pathname]);
 
   if (!authorized) {
     return (
