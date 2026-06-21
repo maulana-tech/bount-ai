@@ -68,7 +68,7 @@ export async function getT3nClients(userApiKey?: string): Promise<{ t3n: T3nClie
   return promise;
 }
 
-export async function registerT3nContract(name: string, wasmBuffer: Buffer, userApiKey?: string): Promise<{ contractId: string } | null> {
+export async function registerT3nContract(name: string, wasmBuffer: Buffer, version = "0.1.0", userApiKey?: string): Promise<{ contractId: string } | null> {
   const clients = await getT3nClients(userApiKey);
   if (!clients) {
     console.log("[T3N SDK] T3N client not initialized. Skipping real registration.");
@@ -77,10 +77,10 @@ export async function registerT3nContract(name: string, wasmBuffer: Buffer, user
 
   try {
     const tailName = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
-    console.log(`[T3N SDK] Registering contract tail "${tailName}" on T3N...`);
+    console.log(`[T3N SDK] Registering contract tail "${tailName}" v${version} on T3N...`);
     const result = (await clients.tenant.contracts.register({
       tail: tailName,
-      version: "0.1.0",
+      version,
       wasm: wasmBuffer,
     })) as any;
 
@@ -92,7 +92,7 @@ export async function registerT3nContract(name: string, wasmBuffer: Buffer, user
   }
 }
 
-export async function executeT3nContract(name: string, input: string, userApiKey?: string): Promise<any | null> {
+export async function executeT3nContract(name: string, input: string, userApiKey?: string, version = "0.1.0"): Promise<any | null> {
   const clients = await getT3nClients(userApiKey);
   if (!clients) {
     return null;
@@ -100,9 +100,9 @@ export async function executeT3nContract(name: string, input: string, userApiKey
 
   try {
     const tailName = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
-    console.log(`[T3N SDK] Executing contract tail "${tailName}" on T3N TEE...`);
+    console.log(`[T3N SDK] Executing contract tail "${tailName}" v${version} on T3N TEE...`);
     const executeResult = await clients.tenant.contracts.execute(tailName, {
-      version: "0.1.0",
+      version,
       functionName: "execute",
       input: input,
     });
