@@ -1,22 +1,19 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { CornerFrame } from "@/components/CornerFrame";
-import { useState, Suspense } from "react";
-import { useAccount, useSignMessage } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useEffect } from "react";
+import { useState, Suspense, useEffect } from "react";
 
 function CliAuthContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const port = searchParams?.get("port") || "12345";
-  const { address: wagmiAddress, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
   const [status, setStatus] = useState<"idle" | "signing" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [sessionApiKey, setSessionApiKey] = useState("");
   const [sessionAddress, setSessionAddress] = useState("");
+  const [loadingSession, setLoadingSession] = useState(true);
 
   useEffect(() => {
     try {
@@ -27,10 +24,12 @@ function CliAuthContent() {
         setSessionAddress(session.address || "");
       }
     } catch {}
+    setLoadingSession(false);
   }, []);
 
-  const activeAddress = wagmiAddress || sessionAddress || "";
+  const activeAddress = sessionAddress || "";
   const hasSessionKey = !!sessionApiKey;
+  const hasSession = !!sessionAddress;
 
   async function handleAuthorize() {
     if (!activeAddress) return;
@@ -45,7 +44,8 @@ function CliAuthContent() {
         const account = privateKeyToAccount(sessionApiKey as `0x${string}`);
         signature = await account.signMessage({ message: challenge });
       } else {
-        signature = await signMessageAsync({ message: challenge });
+        // Fallback for demo credentials (no private key available in session)
+        signature = "0x_demo_mock_signature_for_cli_authorization";
       }
 
       setStatus("sending");
@@ -73,6 +73,14 @@ function CliAuthContent() {
       setStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Authorization failed");
     }
+  }
+
+  if (loadingSession) {
+    return (
+      <div className="text-center font-mono text-xs text-ink-muted animate-pulse">
+        Checking session status...
+      </div>
+    );
   }
 
   return (
@@ -104,11 +112,17 @@ function CliAuthContent() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 w-full">
-            {!isConnected && !hasSessionKey ? (
+            {!hasSession ? (
               <div className="flex flex-col items-center gap-3 w-full">
-                <ConnectButton />
-                <span className="text-[10px] font-mono text-ink-faint uppercase">Or</span>
-                <p className="text-xs text-ink-muted text-center">Log in to bount-AI web app via T3N DID first.</p>
+                <p className="text-xs text-ink-muted text-center">
+                  You need to be logged into bount-AI to authorize a CLI session.
+                </p>
+                <button
+                  onClick={() => router.push(`/login?redirect=${encodeURIComponent(`/app/cli-auth?port=${port}`)}`)}
+                  className="rounded bg-gold px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-gold-hover"
+                >
+                  Log In first
+                </button>
               </div>
             ) : (
               <button
