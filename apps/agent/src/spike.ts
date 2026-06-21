@@ -51,11 +51,16 @@ export async function runSpike(
       for (const f of files) {
         if (f.endsWith(".wasm")) {
           const id = f.replace(/\.wasm$/i, "");
+          const isEnclavesCrate = id === "enclaves";
           customCaps.push({
             id,
             label: id.charAt(0).toUpperCase() + id.slice(1),
-            description: `TEE secure skill: ${id}`,
-            keywords: [id.toLowerCase()],
+            description: isEnclavesCrate
+              ? "Confidential enclave TEE model runner. Use this to securely execute prompt instructions or fetch Venice LLM outputs inside a private execution sandbox."
+              : `TEE secure skill: ${id}`,
+            keywords: isEnclavesCrate
+              ? ["enclaves", "secure", "confidential", "sandbox", "tee", "secret"]
+              : [id.toLowerCase()],
             unitCostUsd: 0.1, // Positive default cost to prevent EADDRINUSE / Invalid maxAmount 0
             product: "text",
           });
@@ -192,17 +197,28 @@ export async function runSpike(
     } else {
       // Generik: agent custom buatan user, audio, video, dll.
       const wasmPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.wasm`);
+      const metaPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.json`);
       const isTEE = fs.existsSync(wasmPath);
       
       let teeLog = "";
       let realTeeExecuted = false;
       let textResult = "";
+      let contractVersion = "0.1.0";
 
       if (isTEE) {
-        console.log(`[T3N TEE] Verified and executing WASM component for ${t.agent} in secure TEE enclave`);
+        if (fs.existsSync(metaPath)) {
+          try {
+            const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+            if (meta.version) {
+              contractVersion = meta.version;
+            }
+          } catch {}
+        }
+
+        console.log(`[T3N TEE] Verified and executing WASM component for ${t.agent} v${contractVersion} in secure TEE enclave`);
         
         try {
-          const t3nResult = await executeT3nContract(t.agent, request, userApiKey);
+          const t3nResult = await executeT3nContract(t.agent, request, userApiKey, contractVersion);
           if (t3nResult !== null) {
             textResult = typeof t3nResult === "string" ? t3nResult : JSON.stringify(t3nResult);
             realTeeExecuted = true;
@@ -211,7 +227,7 @@ export async function runSpike(
             activity.push({
               id: `a${at}-tee`,
               agent: t.agent,
-              action: `[TEE] Verified & Executed on T3N testnet (did:t3n:${t.agent.toLowerCase()})`,
+              action: `[TEE] Verified & Executed on T3N testnet (did:t3n:${t.agent.toLowerCase()} v${contractVersion})`,
               amount: 0,
               status: "confirmed",
               txHash: `0xtee_real_${Buffer.from(t.agent).toString("hex").slice(0, 28)}`,
