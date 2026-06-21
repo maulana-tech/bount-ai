@@ -74,42 +74,47 @@ function sanitizeAgents(raw: unknown): Capability[] {
  */
 export const spikeRoute = new Hono()
   .post("/", async (c) => {
-    const body = await c.req
-      .json<{
-        request?: string;
-        capabilities?: unknown;
-        rootDelegation?: unknown;
-        cap?: unknown;
-        apiKey?: string;
-      }>()
-      .catch(() => ({}) as Record<string, unknown>);
-    const request =
-      (body.request as string)?.trim() ||
-      "research 3 competitors, then make a poster";
+    try {
+      const body = await c.req
+        .json<{
+          request?: string;
+          capabilities?: unknown;
+          rootDelegation?: unknown;
+          cap?: unknown;
+          apiKey?: string;
+        }>()
+        .catch(() => ({}) as Record<string, unknown>);
+      const request =
+        (body.request as string)?.trim() ||
+        "research 3 competitors, then make a poster";
 
-    const root = reviveDelegation(body.rootDelegation);
-    const capUsd = Number(body.cap);
-    const grant =
-      root && Number.isFinite(capUsd) && capUsd > 0
-        ? { root, capUsd: Math.min(capUsd, 1000) }
-        : undefined;
+      const root = reviveDelegation(body.rootDelegation);
+      const capUsd = Number(body.cap);
+      const grant =
+        root && Number.isFinite(capUsd) && capUsd > 0
+          ? { root, capUsd: Math.min(capUsd, 1000) }
+          : undefined;
 
-    const authHeader = c.req.header("Authorization") || "";
-    let apiKey = authHeader.replace(/^Bearer\s+/i, "").trim();
-    if (apiKey.startsWith("mock_jwt_token_preauth_")) {
-      apiKey = apiKey.replace("mock_jwt_token_preauth_", "");
+      const authHeader = c.req.header("Authorization") || "";
+      let apiKey = authHeader.replace(/^Bearer\s+/i, "").trim();
+      if (apiKey.startsWith("mock_jwt_token_preauth_")) {
+        apiKey = apiKey.replace("mock_jwt_token_preauth_", "");
+      }
+      if (!apiKey && typeof body.apiKey === "string") {
+        apiKey = body.apiKey;
+      }
+
+      const result = await runSpike(
+        request,
+        sanitizeAgents(body.capabilities),
+        grant,
+        apiKey || undefined,
+      );
+      return c.json(result);
+    } catch (err: any) {
+      console.error("[spikeRoute] Critical error in /spike handler:", err);
+      return c.json({ error: err.message || String(err), stack: err.stack }, 500);
     }
-    if (!apiKey && typeof body.apiKey === "string") {
-      apiKey = body.apiKey;
-    }
-
-    const result = await runSpike(
-      request,
-      sanitizeAgents(body.capabilities),
-      grant,
-      apiKey || undefined,
-    );
-    return c.json(result);
   })
   // GET /spike/agent — identitas delegate agent untuk membangun grant di client.
   .get("/agent", (c) => c.json({ ...agentIdentity(), seller: SELLER }))
