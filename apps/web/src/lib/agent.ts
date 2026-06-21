@@ -40,6 +40,18 @@ export async function runSpike(
         : {}),
     }),
   });
-  if (!res.ok) throw new Error(`agent responded ${res.status}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    const detail = errorData && typeof errorData === "object" && "error" in errorData
+      ? String(errorData.error)
+      : "";
+    const stack = errorData && typeof errorData === "object" && "stack" in errorData
+      ? String(errorData.stack)
+      : "";
+    if (stack) {
+      console.error("[Backend Stack Trace]:", stack);
+    }
+    throw new Error(`agent responded ${res.status}${detail ? `: ${detail}` : ""}`);
+  }
   return (await res.json()) as SpikeResult;
 }
