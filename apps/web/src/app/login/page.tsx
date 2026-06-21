@@ -7,7 +7,7 @@ import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
-const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
+const AGENT_URL = (process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787").replace(/\/$/, "");
 
 function LoginContent() {
   const router = useRouter();
