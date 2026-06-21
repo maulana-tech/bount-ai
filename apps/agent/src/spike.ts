@@ -182,87 +182,102 @@ export async function runSpike(
     // punya prompt khusus; agent custom (+ audio/video) jatuh ke cabang generik
     // yang memakai label + description-nya sebagai system prompt.
     const label = capability?.label ?? t.agent;
-    if (capability?.product === "image" || t.agent === "image") {
-      const { imageUrl } = await runMedia(request);
-      outputs.push({ agent: t.agent, label, type: "image", imageUrl });
-    } else if (t.agent === "research") {
-      const { summary } = await runResearch(request);
-      outputs.push({ agent: t.agent, label, type: "text", text: summary, content: summary });
-    } else if (t.agent === "writing") {
-      const { text } = await runText(request, "You are a professional copywriter. Write content in English.");
-      outputs.push({ agent: t.agent, label, type: "text", text, content: text });
-    } else if (t.agent === "translate") {
-      const { text } = await runText(request, "You are a professional translator. Translate accurately.");
-      outputs.push({ agent: t.agent, label, type: "text", text, content: text });
-    } else {
-      // Generik: agent custom buatan user, audio, video, dll.
-      const wasmPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.wasm`);
-      const metaPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.json`);
-      const isTEE = fs.existsSync(wasmPath);
-      
-      let teeLog = "";
-      let realTeeExecuted = false;
-      let textResult = "";
-      let contractVersion = "0.1.0";
-
-      if (isTEE) {
-        if (fs.existsSync(metaPath)) {
-          try {
-            const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
-            if (meta.version) {
-              contractVersion = meta.version;
-            }
-          } catch {}
-        }
-
-        console.log(`[T3N TEE] Verified and executing WASM component for ${t.agent} v${contractVersion} in secure TEE enclave`);
+    try {
+      if (capability?.product === "image" || t.agent === "image") {
+        const { imageUrl } = await runMedia(request);
+        outputs.push({ agent: t.agent, label, type: "image", imageUrl });
+      } else if (t.agent === "research") {
+        const { summary } = await runResearch(request);
+        outputs.push({ agent: t.agent, label, type: "text", text: summary, content: summary });
+      } else if (t.agent === "writing") {
+        const { text } = await runText(request, "You are a professional copywriter. Write content in English.");
+        outputs.push({ agent: t.agent, label, type: "text", text, content: text });
+      } else if (t.agent === "translate") {
+        const { text } = await runText(request, "You are a professional translator. Translate accurately.");
+        outputs.push({ agent: t.agent, label, type: "text", text, content: text });
+      } else {
+        // Generik: agent custom buatan user, audio, video, dll.
+        const wasmPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.wasm`);
+        const metaPath = path.resolve("./published_skills", `${t.agent.toLowerCase()}.json`);
+        const isTEE = fs.existsSync(wasmPath);
         
-        try {
-          const t3nResult = await executeT3nContract(t.agent, request, userApiKey, contractVersion);
-          if (t3nResult !== null) {
-            textResult = typeof t3nResult === "string" ? t3nResult : JSON.stringify(t3nResult);
-            realTeeExecuted = true;
-            console.log(`[T3N TEE] Secure Enclave Execution succeeded:`, textResult);
-            
+        let teeLog = "";
+        let realTeeExecuted = false;
+        let textResult = "";
+        let contractVersion = "0.1.0";
+
+        if (isTEE) {
+          if (fs.existsSync(metaPath)) {
+            try {
+              const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+              if (meta.version) {
+                contractVersion = meta.version;
+              }
+            } catch {}
+          }
+
+          console.log(`[T3N TEE] Verified and executing WASM component for ${t.agent} v${contractVersion} in secure TEE enclave`);
+          
+          try {
+            const t3nResult = await executeT3nContract(t.agent, request, userApiKey, contractVersion);
+            if (t3nResult !== null) {
+              textResult = typeof t3nResult === "string" ? t3nResult : JSON.stringify(t3nResult);
+              realTeeExecuted = true;
+              console.log(`[T3N TEE] Secure Enclave Execution succeeded:`, textResult);
+              
+              activity.push({
+                id: `a${at}-tee`,
+                agent: t.agent,
+                action: `[TEE] Verified & Executed on T3N testnet (did:t3n:${t.agent.toLowerCase()} v${contractVersion})`,
+                amount: 0,
+                status: "confirmed",
+                txHash: `0xtee_real_${Buffer.from(t.agent).toString("hex").slice(0, 28)}`,
+                at,
+              });
+            }
+          } catch (err) {
+            console.warn(`[T3N TEE] Real T3N execution failed, falling back to simulation:`, err);
+            teeLog = `\n(Real T3N execution failed, fell back to simulated run: ${err instanceof Error ? err.message : String(err)})`;
+          }
+
+          if (!realTeeExecuted) {
             activity.push({
               id: `a${at}-tee`,
               agent: t.agent,
-              action: `[TEE] Verified & Executed on T3N testnet (did:t3n:${t.agent.toLowerCase()} v${contractVersion})`,
+              action: `[TEE] Verify & Execute WASM secure enclave (Simulated)`,
               amount: 0,
               status: "confirmed",
-              txHash: `0xtee_real_${Buffer.from(t.agent).toString("hex").slice(0, 28)}`,
+              txHash: `0xtee_${Buffer.from(t.agent).toString("hex").slice(0, 32)}`,
               at,
             });
           }
-        } catch (err) {
-          console.warn(`[T3N TEE] Real T3N execution failed, falling back to simulation:`, err);
-          teeLog = `\n(Real T3N execution failed, fell back to simulated run: ${err instanceof Error ? err.message : String(err)})`;
         }
 
         if (!realTeeExecuted) {
-          activity.push({
-            id: `a${at}-tee`,
-            agent: t.agent,
-            action: `[TEE] Verify & Execute WASM secure enclave (Simulated)`,
-            amount: 0,
-            status: "confirmed",
-            txHash: `0xtee_${Buffer.from(t.agent).toString("hex").slice(0, 32)}`,
-            at,
-          });
+          const sys = `You are ${label}, a specialist agent. ${capability?.description ?? ""} Produce a concise, useful result in English for the user's request.`;
+          const { text } = await runText(request, sys);
+          textResult = text;
         }
-      }
+        
+        const content = isTEE 
+          ? `[T3N Secure Enclave Execution - did:t3n:${t.agent.toLowerCase()}]${teeLog}\n\n${textResult}`
+          : textResult;
 
-      if (!realTeeExecuted) {
-        const sys = `You are ${label}, a specialist agent. ${capability?.description ?? ""} Produce a concise, useful result in English for the user's request.`;
-        const { text } = await runText(request, sys);
-        textResult = text;
+        outputs.push({ agent: t.agent, label, type: "text", text: content, content: content });
       }
-      
-      const content = isTEE 
-        ? `[T3N Secure Enclave Execution - did:t3n:${t.agent.toLowerCase()}]${teeLog}\n\n${textResult}`
-        : textResult;
-
-      outputs.push({ agent: t.agent, label, type: "text", text: content, content: content });
+    } catch (err: any) {
+      console.error(`[spike] Specialist ${t.agent} execution failed:`, err);
+      const fallbackText = `[Specialist ${label} Error]: ${err?.message || String(err)}`;
+      outputs.push({ agent: t.agent, label, type: "text", text: fallbackText, content: fallbackText });
+      activity.push({
+        id: `a${at}-failed`,
+        agent: t.agent,
+        action: `Failed: ${err?.message || String(err)}`,
+        amount: 0,
+        status: "failed",
+        txHash: "0xfailed",
+        at,
+      });
     }
   }
 
