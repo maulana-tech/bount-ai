@@ -125,6 +125,61 @@ export default function AgentsPage() {
           ))}
         </div>
 
+        {/* CLI Guide section */}
+        <div className="mt-8">
+          <CornerFrame label="Developer CLI Guide (npx skill)">
+            <div className="space-y-6">
+              <p className="text-sm leading-relaxed text-ink-muted">
+                bount-AI provides a local developer CLI allowing you to build, compile, and publish custom secure skills that execute inside Trusted Execution Environments (TEEs) on the Terminal 3 Network (T3N).
+              </p>
+              
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="border border-line bg-panel p-5 rounded space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs bg-gold-tint px-2 py-0.5 rounded text-gold font-semibold">Step 1</span>
+                    <h3 className="text-sm font-semibold tracking-tight">Otorisasi CLI (Login)</h3>
+                  </div>
+                  <p className="text-xs leading-relaxed text-ink-muted">
+                    Compile CLI dan kaitkan terminal Anda dengan identitas web bount-AI Anda:
+                  </p>
+                  <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
+                    {`# Compile CLI paket lokal\npnpm --filter @concierge/cli build\n\n# Jalankan login flow\nnpx skill login`}
+                  </pre>
+                  <p className="font-mono text-[9px] text-ink-faint leading-normal">
+                    * Ini akan membuka browser ke halaman cli-auth. Jika menggunakan versi Vercel, salin URL ke tab Vercel Anda.
+                  </p>
+                </div>
+
+                <div className="border border-line bg-panel p-5 rounded space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs bg-gold-tint px-2 py-0.5 rounded text-gold font-semibold">Step 2</span>
+                    <h3 className="text-sm font-semibold tracking-tight">Membuat & Publish Skill</h3>
+                  </div>
+                  <p className="text-xs leading-relaxed text-ink-muted">
+                    Inisialisasi template, kompilasi ke WebAssembly (WASM), lalu daftarkan ke T3N:
+                  </p>
+                  <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
+                    {`# Buat skill baru\nnpx skill init my-agent\ncd my-agent\n\n# Build ke WASM\nnpx skill build\n\n# Publish ke T3N\nnpx skill publish`}
+                  </pre>
+                </div>
+
+                <div className="border border-line bg-panel p-5 rounded space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs bg-gold-tint px-2 py-0.5 rounded text-gold font-semibold">Step 3</span>
+                    <h3 className="text-sm font-semibold tracking-tight">Eksekusi Enclave (Run)</h3>
+                  </div>
+                  <p className="text-xs leading-relaxed text-ink-muted">
+                    Jalankan TEE skill Anda langsung dari terminal untuk memicu pembayaran mikro x402:
+                  </p>
+                  <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
+                    {`# Arahkan ke backend Vercel (opsional)\nexport AGENT_PUBLIC_URL=https://bount-ai-agent.vercel.app\n\n# Jalankan skill\nnpx skill run my-agent "Your prompt here"`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </CornerFrame>
+        </div>
+
         <p className="mt-6 font-mono text-xs text-ink-faint">
           {total} agents available
           {custom.length > 0 ? ` · ${custom.length} custom` : ""}
