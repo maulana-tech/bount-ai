@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWalletClient } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Modal } from "./Modal";
 import { useBudget } from "@/lib/budget";
-import { signBudgetGrant, signBudgetGrantWithPrivateKey } from "@/lib/grant";
+import { signBudgetGrantWithPrivateKey } from "@/lib/grant";
 
 /**
  * Grant budget nyata: user menandatangani spending-limit (ERC-7710) dengan
- * wallet-nya. Popup MetaMask, off-chain (tanpa gas). Hasilnya disimpan di budget
+ * T3N identity-nya. Popup MetaMask tidak diperlukan. Hasilnya disimpan di budget
  * store dan dikirim ke `/spike` sebagai root delegation.
  */
 export function GrantBudgetModal({
@@ -19,8 +17,6 @@ export function GrantBudgetModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { address, isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
   const { grant } = useBudget();
   const [cap, setCap] = useState("5");
   const [busy, setBusy] = useState(false);
@@ -63,14 +59,6 @@ export function GrantBudgetModal({
         );
         grant(signed.cap, signed.rootDelegation);
         onClose();
-      } else if (walletClient && address) {
-        const signed = await signBudgetGrant(
-          walletClient,
-          address,
-          Math.min(amount, 1000),
-        );
-        grant(signed.cap, signed.rootDelegation);
-        onClose();
       } else {
         // Fallback for demo credentials
         grant(amount, null as any);
@@ -87,7 +75,7 @@ export function GrantBudgetModal({
     <Modal open={open} onClose={onClose} title="Grant budget">
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-ink-muted">
-          Sign a spending limit with your T3N identity or wallet. bount-AI may spend up to this cap
+          Sign a spending limit with your T3N identity. bount-AI may spend up to this cap
           on your behalf via ERC-7710 delegation — and nothing more.
         </p>
         <label className="block">
@@ -114,13 +102,8 @@ export function GrantBudgetModal({
               ? "Signing..."
               : hasSessionKey
               ? "Sign grant with T3N DID"
-              : isConnected
-              ? "Sign grant with Wallet"
               : "Confirm demo budget"}
           </button>
-          {!isConnected && !hasSessionKey && (
-            <ConnectButton showBalance={false} />
-          )}
           <button
             onClick={onClose}
             className="rounded border border-line px-4 py-2 text-sm text-ink-muted transition-colors hover:bg-panel-2"
@@ -129,7 +112,7 @@ export function GrantBudgetModal({
           </button>
         </div>
         <p className="font-mono text-[10px] text-ink-faint">
-          Off-chain signature · Base Sepolia · no gas. On-chain settlement still
+          Confidential signature · Base Sepolia · no gas. On-chain settlement still
           simulated.
         </p>
       </div>
