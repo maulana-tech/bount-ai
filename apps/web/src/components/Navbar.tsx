@@ -36,10 +36,10 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-sm">
-      <div
+    <div className="sticky top-4 z-50 w-full px-4 sm:px-6">
+      <nav
         className={cn(
-          "mx-auto flex items-center justify-between px-4 py-3.5",
+          "mx-auto flex items-center justify-between border border-line bg-paper/85 px-5 py-3 backdrop-blur-md rounded-xl shadow-lg shadow-gold/5 transition-all duration-300",
           variant === "landing" ? "max-w-6xl" : "max-w-7xl",
         )}
       >
@@ -96,8 +96,8 @@ export function Navbar({ variant }: { variant: "landing" | "app" }) {
             )}
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
 
