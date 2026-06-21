@@ -4,7 +4,7 @@
 // ships with the T3N ADK and is not yet vendored into this repo. Confirm the
 // actual signatures against the T3N ADK docs/SDK and adjust only this file —
 // the rest of the enclave imports from here.
-package t3n:host;
+package t3n:enclave;
 
 /// Confidential key/value store. Used to read secrets (e.g. the Venice API
 /// key) from a private namespace such as "z:<tid>:secrets" without the value
