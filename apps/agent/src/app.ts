@@ -53,6 +53,9 @@ app.post("/publish-skill", async (c) => {
   const wasmPath = path.join(uploadDir, `${name.toLowerCase()}.wasm`);
   fs.writeFileSync(wasmPath, wasmBuffer);
 
+  const metaPath = path.join(uploadDir, `${name.toLowerCase()}.json`);
+  fs.writeFileSync(metaPath, JSON.stringify({ version: contractVersion }));
+
   const crypto = await import("crypto");
   const hash = crypto.createHash("sha256").update(wasmBuffer).digest("hex");
   const enclaveAddress = `0x${hash.slice(0, 40)}`;
