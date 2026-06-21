@@ -2,7 +2,7 @@ wit_bindgen::generate!();
 
 use exports::t3n::enclave::contracts::Guest;
 // Confidential host capabilities provided by the T3N node (see wit/host.wit).
-use t3n::host::{http, kv};
+use t3n::enclave::{http, kv};
 
 pub struct Component;
 
@@ -59,7 +59,7 @@ impl Guest for Component {
             ("Content-Type".to_string(), "application/json".to_string()),
         ];
 
-        let response = http::request("POST", VENICE_URL, &headers, Some(body))
+        let response = http::request("POST", VENICE_URL, &headers, Some(body.as_str()))
             .map_err(|e| format!("venice request failed: {e}"))?;
 
         // Extract the assistant message; fall back to the raw body if the shape
