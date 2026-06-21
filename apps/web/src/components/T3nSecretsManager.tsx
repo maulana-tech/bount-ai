@@ -9,7 +9,7 @@ export function T3nSecretsManager() {
   const [tail, setTail] = useState("secrets");
   const [key, setKey] = useState("VENICE_API_KEY");
   const [value, setValue] = useState("");
-  const [enclaveAddress, setEnclaveAddress] = useState("0x9a506280aae6c867f2e8631ade675fa7e76d20d5");
+  const [contractId, setContractId] = useState("1");
   const [apiKey, setApiKey] = useState("");
   
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -46,7 +46,7 @@ export function T3nSecretsManager() {
         body: JSON.stringify({
           apiKey,
           tail: tail.trim(),
-          enclaveAddress: enclaveAddress.trim(),
+          contractId: contractId.trim(),
         }),
       });
 
@@ -123,12 +123,12 @@ export function T3nSecretsManager() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-mono text-[10px] uppercase tracking-wide text-ink-faint">Authorized Enclave Address</span>
+            <span className="mb-1 block font-mono text-[10px] uppercase tracking-wide text-ink-faint">Authorized Contract ID (u32)</span>
             <input
               type="text"
-              value={enclaveAddress}
-              onChange={(e) => setEnclaveAddress(e.target.value)}
-              className="w-full border border-line bg-panel px-3 py-1.5 font-mono text-[10px] outline-none focus:border-gold text-ink"
+              value={contractId}
+              onChange={(e) => setContractId(e.target.value)}
+              className="w-full border border-line bg-panel px-3 py-1.5 font-mono text-xs outline-none focus:border-gold text-ink"
             />
           </label>
         </div>
