@@ -1,4 +1,5 @@
 import { keccak256, toHex, type Address, type Hex } from "viem";
+import { config } from "../config.js";
 
 /**
  * Klien pembayaran x402: menangani HTTP 402 dari layanan berbayar, "membayar",
@@ -35,12 +36,76 @@ export interface PaidFetchResult<T> {
   settlement: "simulated" | "onchain";
 }
 
+function localSellerBuy(urlStr: string, xPaymentHeader?: string) {
+  // Simple search params extraction since URL parsing might fail on relative urls
+  const getParam = (name: string) => {
+    const reg = new RegExp(`[?&]${name}=([^&#]*)`, "i");
+    const val = reg.exec(urlStr);
+    return val ? decodeURIComponent(val[1]) : null;
+  };
+
+  const product = getParam("product") ?? "dataset";
+  const max = getParam("amount") ?? "1000000";
+  const payToParam = getParam("payTo");
+  const payTo = /^0x[0-9a-fA-F]{40}$/.test(payToParam ?? "") ? payToParam! : "0x000000000000000000000000000000000000dEaD";
+  
+  if (!xPaymentHeader) {
+    return {
+      status: 402,
+      json: {
+        x402Version: 1,
+        accepts: [
+          {
+            scheme: "exact",
+            network: config.chain.name,
+            maxAmountRequired: max,
+            asset: config.usdc,
+            payTo,
+            resource: `/seller/buy?product=${product}`,
+            description: `${product} service`,
+          },
+        ],
+      },
+    };
+  }
+
+  const q = getParam("q") ?? "";
+  return {
+    status: 200,
+    json: {
+      product,
+      data: `<${product}> output for "${q}"`,
+      source: "mock-seller",
+    },
+  };
+}
+
 export async function paidFetch<T = unknown>(
   url: string,
   payer: { address: Address },
   opts?: { maxPayUsd?: number },
 ): Promise<PaidFetchResult<T>> {
-  const first = await fetch(url);
+  const isLocalSeller = url.includes("/seller/buy");
+
+  const fetchJson = async (targetUrl: string, headers?: Record<string, string>) => {
+    if (isLocalSeller) {
+      const res = localSellerBuy(targetUrl, headers?.["X-PAYMENT"] || headers?.["x-payment"]);
+      return {
+        status: res.status,
+        ok: res.status >= 200 && res.status < 300,
+        json: async () => res.json,
+      };
+    } else {
+      const res = await fetch(targetUrl, { headers });
+      return {
+        status: res.status,
+        ok: res.ok,
+        json: async () => res.json(),
+      };
+    }
+  };
+
+  const first = await fetchJson(url);
 
   if (first.status !== 402) {
     if (!first.ok) throw new Error(`seller responded ${first.status}`);
@@ -79,7 +144,7 @@ export async function paidFetch<T = unknown>(
     }),
   );
 
-  const second = await fetch(url, { headers: { "X-PAYMENT": payment } });
+  const second = await fetchJson(url, { "X-PAYMENT": payment });
   if (!second.ok) throw new Error(`retry after payment responded ${second.status}`);
 
   return {
