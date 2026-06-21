@@ -1,13 +1,12 @@
 import {
   createDelegation,
   getDeleGatorEnvironment,
+  signDelegation as signDelegationCore,
 } from "@metamask/delegation-toolkit";
-import { signDelegation } from "@metamask/delegation-toolkit/actions";
+import { signDelegation as signDelegationViem } from "@metamask/delegation-toolkit/actions";
 import { createCaveatBuilder } from "@metamask/delegation-toolkit/utils";
 import type { Address, WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
 
 /**
  * Grant nyata: user menandatangani root delegation ERC-7710 dengan wallet-nya
@@ -68,7 +67,7 @@ export async function signBudgetGrant(
     to: id.address,
     caveats,
   });
-  const signature = await signDelegation(wallet, {
+  const signature = await signDelegationViem(wallet, {
     account,
     delegation,
     delegationManager: id.delegationManager,
@@ -99,14 +98,8 @@ export async function signBudgetGrantWithPrivateKey(
     caveats,
   });
 
-  const wallet = createWalletClient({
-    account,
-    chain: baseSepolia,
-    transport: http(),
-  });
-
-  const signature = await signDelegation(wallet as any, {
-    account: account.address,
+  const signature = await signDelegationCore({
+    privateKey: privateKey as `0x${string}`,
     delegation,
     delegationManager: id.delegationManager,
     chainId: id.chainId,
