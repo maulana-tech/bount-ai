@@ -83,4 +83,48 @@ app.post("/publish-skill", async (c) => {
   });
 });
 
+app.post("/auth/kv/create", async (c) => {
+  try {
+    const { apiKey, tail, enclaveAddress } = await c.req.json().catch(() => ({}));
+    const clients = await getT3nClients(apiKey || undefined);
+    if (!clients) {
+      return c.json({ error: "Failed to initialize T3N client. Check your T3N API Key." }, 400);
+    }
+    const contractId = enclaveAddress || "0x9a506280aae6c867f2e8631ade675fa7e76d20d5";
+    
+    console.log(`[T3N SDK] Creating map tail "${tail}" for enclave contract ${contractId}...`);
+    const map = await clients.tenant.maps.create({
+      tail: tail,
+      visibility: "private",
+      writers: { only: [contractId] },
+      readers: { only: [contractId] }
+    });
+    return c.json({ status: "ok", map });
+  } catch (err: any) {
+    console.error("[T3N SDK] Create map failed:", err);
+    return c.json({ error: err.message || "Failed to create map" }, 500);
+  }
+});
+
+app.post("/auth/kv/set", async (c) => {
+  try {
+    const { apiKey, tail, key, value } = await c.req.json().catch(() => ({}));
+    const clients = await getT3nClients(apiKey || undefined);
+    if (!clients) {
+      return c.json({ error: "Failed to initialize T3N client. Check your T3N API Key." }, 400);
+    }
+    const mapName = clients.tenant.canonicalName(tail);
+    console.log(`[T3N SDK] Seeding secret "${key}" in map "${mapName}"...`);
+    const result = await clients.tenant.executeControl("map-entry-set", {
+      map_name: mapName,
+      key,
+      value
+    });
+    return c.json({ status: "ok", result });
+  } catch (err: any) {
+    console.error("[T3N SDK] Seed secret failed:", err);
+    return c.json({ error: err.message || "Failed to set map entry" }, 500);
+  }
+});
+
 export default app;
