@@ -15,6 +15,7 @@ import { usd, cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { useRouter } from "next/navigation";
+import { T3nSecretsManager } from "@/components/T3nSecretsManager";
 
 // Toolkit delegation berat → muat hanya saat modal grant dibuka.
 const GrantBudgetModal = dynamic(
@@ -368,6 +369,11 @@ export default function Page() {
             {grantOpen && (
               <GrantBudgetModal open onClose={() => setGrantOpen(false)} />
             )}
+
+            {/* T3N Secrets Vault */}
+            <div className="mb-8">
+              <T3nSecretsManager />
+            </div>
 
             {/* quick actions */}
             <div className="mb-8 grid gap-4 sm:grid-cols-3">
