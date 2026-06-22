@@ -1,194 +1,85 @@
-# PROJECT.md — AI Concierge dengan Agent Delegation Chain
+# PROJECT.md — bount-AI (Spesifikasi Platform T3N ADK Bounty)
 
-> Spec produk & teknis untuk submission hackathon MetaMask Smart Accounts Kit × 1Shot API.
-> Brief mentah hackathon ada di `CONTEXT.md`. Dokumen ini = rencana detail.
-> Status: **draft / pre-build**. Tanda ⚠️ = asumsi yang HARUS diverifikasi ke docs sebelum dibangun.
+Dokumen ini berisi spesifikasi produk dan teknis akhir bount-AI untuk pengiriman proyek **Terminal 3 Agent Dev Kit (ADK) Bounty Challenge**.
 
 ---
 
-## 1. Ringkasan
+## 1. Ringkasan Proyek
 
-**Nama kerja:** Concierge (ganti nanti).
+**bount-AI** adalah Web3 Platform dan Developer CLI yang memungkinkan pengguna membuat, mendaftarkan, dan mengeksekusi AI Agent secara konfidensial di dalam **Secure TEE Enclaves (Terminal 3 Network)**. 
 
-**Satu kalimat:** User memberi satu AI Concierge sebuah budget dan izin terbatas; Concierge memakai Venice AI untuk merencanakan tugas, lalu **mendelegasikan ulang (redelegate) sub-budget ke agent-agent spesialis** yang membayar layanan sendiri lewat x402 — seluruh gas dibayar stablecoin via 1Shot relayer.
-
-**Masalah yang dijawab:** Hari ini, memberi AI agent kemampuan membayar = memberi private key / wallet penuh (bahaya). Stack ini memungkinkan **izin terprogram & terbatas**: agent bisa transaksi otonom, tapi user tetap pegang kontrol (limit, kategori, durasi, bisa dicabut).
-
-**Kenapa "delegation chain" itu inti, bukan tempelan:** Alur Concierge → sub-agent → bayar layanan adalah satu rangkaian natural. Redelegation bukan fitur tambahan — itu mekanisme bagaimana budget mengalir dari user ke eksekusi.
-
----
-
-## 2. Strategi track (kenapa satu app, banyak hadiah)
-
-Tiap track dinilai terpisah, jadi satu project bisa di-submit ke beberapa track. Target:
-
-| Track | Hadiah | Bagaimana app ini memenuhinya |
-|---|---|---|
-| **Best Agent** (main) | $3k | Concierge bertindak otonom atas nama user via Advanced Permissions |
-| **Best A2A Coordination** (main) | $3k | Concierge **redelegate** sub-budget ke ResearchAgent & MediaAgent |
-| **Best x402 + ERC-7710** (main) | $3k | Sub-agent membayar layanan via x402 menggunakan delegasi 7710 |
-| **Best use of Venice AI** (bonus) | $3k | Venice = otak perencanaan + generator output (teks/gambar) |
-| **Best Use of 1Shot Relayer** (bonus) | $1k | Relay 7710 via 1Shot, gas USDC, 7702 upgrade, status via webhook |
-
-> Catatan eligibility: bonus track (Venice, 1Shot) **wajib** juga qualify salah satu main track — app ini qualify ketiganya, jadi aman. ⚠️ Konfirmasi apakah satu submission boleh masuk >1 main track sekaligus; kalau hanya boleh 1, pilih **Best A2A** sebagai primary (paling unik & sulit ditiru).
+### Alur Utama
+1. **Identitas Terverifikasi:** Pengguna login dengan wallet MetaMask di frontend web, memicu T3N handshake untuk menghasilkan identitas portabel **`did:t3n`**.
+2. **TEE Enclave (WASM):** Developer memaketkan logika kustom mereka menjadi WebAssembly guest component (`wasm32-wasip2`) menggunakan Rust/TypeScript.
+3. **Penyimpanan Rahasia (KV Maps):** Kunci API sensitif (seperti `VENICE_API_KEY`) disimpan di private KV store milik T3N (`z:<tenant_id>:secrets`) dan di-resolve di dalam memori enklave tertutup saat runtime.
+4. **Pencegahan Kebocoran PII (Placeholders):** Data pribadi disamarkan dengan placeholder. Panggilan HTTP keluar diproses melalui gateway T3N untuk menggantikan placeholder secara aman tanpa mengekspos PII ke host luar.
+5. **Verifikasi & Audit:** Setiap eksekusi diverifikasi secara kriptografis dan dicatat ke dalam log audit T3N yang tahan manipulasi.
 
 ---
 
-## 3. Aktor & komponen
+## 2. Peta Trek Hadiah (Bounty Tracks)
 
-### 3.1 Aktor
-- **User** — manusia pemilik dana. Pegang MetaMask, set budget & izin, lihat hasil.
-- **Concierge Agent** — agent utama (orchestrator). Punya izin dari user. Tidak menyimpan dana; ia memegang *delegasi*.
-- **Specialist Agents** — sub-agent yang menerima redelegasi:
-  - `ResearchAgent` — beli/akses data berbayar via x402, rangkum pakai Venice text.
-  - `MediaAgent` — generate gambar/poster pakai Venice image (berbayar via x402).
-  - (stretch) `ext.` agent lain sesuai kebutuhan.
+Proyek ini dirancang secara khusus untuk memenuhi kriteria penilaian utama **Terminal 3 ADK Bounty**:
 
-### 3.2 Komponen sistem
+| Kriteria Penilaian | Bobot | Bagaimana bount-AI Memenuhinya |
+| --- | --- | --- |
+| **SDK Integration** | **40%** | Mengintegrasikan SDK `@terminal3/t3n-sdk` secara menyeluruh: T3nClient handshake, TenantClient contract registration, KV map creation, dan API execute. |
+| **Completeness of Solution** | **30%** | Menyediakan solusi end-to-end yang terdiri dari Frontend Dashboard (Web), Agent Backend (Hono), dan Developer CLI tool (`bount-ai-cli`). |
+| **Creativity** | **30%** | Memadukan secure enclaves dengan model AI konfidensial dari Venice AI untuk melindungi PII pengguna di setiap pemanggilan LLM. |
+
+---
+
+## 3. Komponen Sistem
+
+### 3.1 Aktor Utama
+* **Pengguna (User)** — Pemilik identitas did:t3n. Mengelola KV maps dan data profil privat di Dashboard.
+* **Developer (Seller)** — Membuat, mengompilasi, dan mempublikasikan TEE enclaves kustom menggunakan `bount-ai-cli`.
+* **Orchestrator Backend** — Mengoordinasikan input pengguna, memanggil T3N contracts, dan menyajikan hasil eksekusi TEE secara visual.
+
+### 3.2 Diagram Integrasi
 ```
-┌────────────┐   grant ERC-7715    ┌──────────────────┐
-│   User     │ ──────────────────► │ Concierge (orch.)│
-│ (MetaMask) │   budget + scope    │  + Venice (plan) │
-└────────────┘                     └────────┬─────────┘
-                                            │ redelegate ERC-7710
-                            ┌───────────────┴───────────────┐
-                            ▼                               ▼
-                    ┌───────────────┐               ┌───────────────┐
-                    │ ResearchAgent │               │  MediaAgent   │
-                    │ x402 + Venice │               │ x402 + Venice │
-                    └───────┬───────┘               └───────┬───────┘
-                            │  semua on-chain tx            │
-                            └──────────────┬───────────────┘
-                                           ▼
-                              ┌──────────────────────────┐
-                              │  1Shot Permissionless     │
-                              │  Relayer (gas in USDC,    │
-                              │  7702 upgrade, webhooks)  │
-                              └──────────────────────────┘
+┌────────────┐   T3N Auth & KV Maps    ┌──────────────────┐
+│   User     │ ──────────────────────► │ Web Dashboard    │
+│ (MetaMask) │   did:t3n session       │ (apps/web)       │
+└────────────┘                         └────────┬─────────┘
+                                                │ fetch /spike
+                                       ┌────────▼─────────┐
+                                       │ Agent Backend    │
+                                       │ (apps/agent)     │
+                                       └────────┬─────────┘
+                                                │ execute contract
+                                       ┌────────▼─────────┐
+                                       │  T3N TEE Cluster │
+                                       │  (WASM Sandbox)  │
+                                       └──────────────────┘
 ```
 
 ---
 
-## 4. Konsep teknis yang dipakai (dengan definisi)
+## 4. Implementasi Teknis & Lokasi Kode
 
-- **ERC-7715 (Advanced Permissions):** dApp meminta izin terbatas dari user lewat MetaMask (`wallet_grantPermissions` ⚠️). User approve sekali; app dapat "permission context" untuk eksekusi atas nama user dalam batas yang disetujui (limit jumlah, kategori, kadaluarsa).
-- **ERC-7710 (Delegation/Redelegation):** mekanisme on-chain agar pemegang delegasi bisa mengeksekusi atas nama akun lain — dan **meneruskan (redelegate)** sebagian wewenang ke pihak lain dengan caveat/limit lebih ketat. Inti dari A2A.
-- **ERC-7702:** otorisasi agar EOA biasa "di-upgrade" jadi smart account. Dipakai 1Shot saat pertama kali agar akun bisa pakai fitur smart-account.
-- **x402:** protokol pembayaran berbasis HTTP 402 — layanan balas `402 Payment Required`, klien bayar (micropayment stablecoin) lalu request diulang & dilayani. Cocok untuk agent bayar-per-pakai.
-- **1Shot Permissionless Relayer:** meneruskan transaksi 7710 ke mainnet, gas dibayar stablecoin (USDC/USDT/dll), handle 7702 upgrade, kirim **webhook** untuk status tx.
-- **Venice AI:** API OpenAI-compatible, multimodal (teks/gambar/audio/video), privasi-first. Dipakai untuk reasoning + generasi output.
-
----
-
-## 5. Alur utama (end-to-end) — ini juga skrip demo
-
-**Skenario contoh:** User minta *"Riset 3 kompetitor produk X, lalu buat 1 poster ringkasannya."*
-
-1. **Connect & grant.** User connect MetaMask. App minta Advanced Permission (ERC-7715): plafon `$50 USDC`, kategori `riset+media`, kadaluarsa `24 jam`. User approve sekali.
-   - *(Pertama kali: 1Shot melakukan 7702 upgrade akun user/agent.)* ⚠️ konfirmasi siapa yang di-upgrade.
-2. **Plan (Venice).** Concierge kirim prompt ke Venice → dapat rencana terstruktur: `[research: 3 sumber], [media: 1 poster]`, plus estimasi biaya per sub-tugas.
-3. **Redelegate (ERC-7710).** Concierge redelegate: `ResearchAgent` dapat plafon `$30`, `MediaAgent` dapat `$20`, masing-masing dengan caveat (hanya boleh bayar endpoint x402 tertentu). ⚠️ verifikasi cara set caveat di Delegation Toolkit.
-4. **Eksekusi ResearchAgent.** Untuk tiap sumber data: panggil endpoint → terima `402` → bayar via x402 (relay 1Shot, gas USDC) → terima data → Venice text merangkum.
-5. **Eksekusi MediaAgent.** Panggil Venice image-gen (berbayar via x402) → terima poster.
-6. **Status real-time.** UI dengar **webhook 1Shot** → tampilkan tiap tx: pending → confirmed, dengan biaya gas USDC.
-7. **Hasil.** User lihat: ringkasan riset + poster + jejak audit lengkap (siapa membayar apa, berapa, sisa budget). User bisa **revoke** izin kapan saja.
-
-**Yang harus terlihat jelas di video demo:** (a) approval permission di MetaMask, (b) redelegation terjadi, (c) pembayaran x402 nyata on-chain, (d) penggunaan Venice di alur utama, (e) status via 1Shot webhook.
+* **T3N SDK Integrations & Handshake**:
+  * **[apps/agent/src/integrations/t3n.ts](file:///Users/em/web/bount-ai/apps/agent/src/integrations/t3n.ts)**: Penanganan `T3nClient` handshake, pembuatan `TenantClient`, pendaftaran kontrak WASM, dan eksekusi TEE contract.
+* **Rust Guest Contract Enclave**:
+  * **[packages/enclaves/src/lib.rs](file:///Users/em/web/bount-ai/packages/enclaves/src/lib.rs)**: Logika Rust enklave yang memanfaatkan `t3n:host/kv` untuk membaca secrets Venice AI dan memicu pemanggilan HTTP aman lewat `t3n:host/http`.
+* **Developer CLI Suite (`skill` / `bount-ai-cli`)**:
+  * **[packages/cli/src/compile.ts](file:///Users/em/web/bount-ai/packages/cli/src/compile.ts)**: Proses kompilasi kode lokal menjadi WASM preview 2 component.
+  * **[packages/cli/src/publish.ts](file:///Users/em/web/bount-ai/packages/cli/src/publish.ts)**: Pendaftaran biner ke node T3N dengan tracking versi otomatis.
 
 ---
 
-## 6. Permission & delegation model (detail)
+## 5. Alur Kerja CLI Developer
 
-- **Tingkat 1 — User → Concierge (ERC-7715):** scope paling luas tapi dibatasi: total cap, kategori, expiry. Disetujui manusia di MetaMask.
-- **Tingkat 2 — Concierge → Specialist (ERC-7710 redelegation):** subset dari Tingkat 1. Caveat lebih ketat: sub-cap per agent, whitelist endpoint/penerima, single-purpose. Tidak butuh klik manusia (Concierge mengeksekusi otomatis dalam batas Tingkat 1).
-- **Prinsip keamanan:** tiap turun level, wewenang hanya boleh **menyempit**, tak pernah melebar. Total pengeluaran semua sub-agent ≤ cap user. Sisa budget & revoke selalu di tangan user.
-- ⚠️ **Verifikasi:** apakah redelegation di Delegation Toolkit mendukung caveat granular (spending limit + target whitelist) secara native, atau perlu enforcer custom.
-
----
-
-## 7. Arsitektur teknis (rencana)
-
-> Belum dibangun — ini proposal. Final stack ditentukan di langkah berikut.
-
-- **Frontend:** Next.js (App Router) + React + Tailwind. Satu halaman utama: grant permission, input request, live status, hasil.
-- **Wallet/chain lib:** `viem` + MetaMask **Delegation Toolkit** (Smart Accounts Kit). Signer: MetaMask extension (signer-agnostic, bisa diganti Privy/Dynamic kalau perlu).
-- **Agent orchestration:** server-side (Next.js route handlers / Node worker). Concierge & specialist sebagai modul logika, bukan harus proses terpisah (MVP: satu service, peran berbeda).
-- **AI:** Venice API (OpenAI-compatible SDK) — endpoint text untuk planning+summary, endpoint image untuk poster.
-- **Payments:** klien x402 (HTTP 402 handler) untuk memanggil layanan berbayar. ⚠️ cek apakah ada lib x402 resmi / contoh facilitator 7710.
-- **Relayer:** 1Shot API untuk submit tx + 7702 upgrade. Webhook receiver (route handler) → push ke UI via SSE/websocket.
-- **Chain:** ⚠️ tentukan — 1Shot relayer "mainnet" disebut di brief; cek testnet yang didukung untuk dev.
-
-**Komponen yang perlu diputuskan / diverifikasi sebelum coding:**
-1. ⚠️ Endpoint x402 mana yang dipakai untuk "data berbayar" di ResearchAgent — apakah Venice sendiri punya endpoint x402, atau perlu mock seller sendiri.
-2. ⚠️ Apakah perlu deploy smart contract sendiri (delegation enforcer) atau cukup yang sudah ada di Delegation Toolkit.
-3. ⚠️ Chain + RPC + faucet untuk testing.
+Developer dapat berinteraksi dengan T3N secara langsung dari terminal dengan perintah runut berikut:
+1. **Login:** `skill login` — Mengautentikasi terminal dengan identitas `did:t3n` MetaMask pengguna.
+2. **Init:** `skill init <name>` — Membuat template TypeScript/Rust TEE component baru.
+3. **Build:** `skill build` — Mengompilasi kode guest menjadi target `wasm32-wasip2` menggunakan compiler cargo.
+4. **Publish:** `skill publish` — Mendaftarkan versi baru WASM component ke node T3N.
+5. **Run:** `skill run <name> <prompt>` — Menjalankan enklave secara otonom di TEE sandbox.
 
 ---
 
-## 8. Scope MVP vs stretch
+## 6. Skenario Keamanan (Threat Model)
 
-### MVP (versi paling minimal yang TETAP nge-cover semua track)
-- 1 Concierge + **2** specialist agent (Research + Media).
-- 1 skenario hardcoded-ish (request bebas, tapi rencana sederhana).
-- Redelegation 1 tingkat (user→concierge→specialist).
-- Venice: 1 text call (plan+summary) + 1 image call.
-- x402: minimal 1 pembayaran nyata per agent.
-- 1Shot: relay + 1 webhook status di UI.
-- UI: satu halaman, jejak audit budget sederhana.
-
-### Stretch (kalau waktu sisa)
-- Agent ke-3+ dinamis (Concierge putuskan butuh agent apa).
-- Multi-level redelegation (specialist redelegate lagi).
-- Recurring/streaming payment (x402 recurring).
-- Multimodal lebih (Venice audio/video).
-- Dashboard analitik pengeluaran.
-
----
-
-## 9. Risiko & mitigasi
-
-| Risiko | Dampak | Mitigasi |
-|---|---|---|
-| Redelegation toolkit belum support caveat granular | Tinggi | Verifikasi paling awal (hari 1); fallback: enforcer custom sederhana atau cap di level app |
-| x402 seller untuk "data" tak tersedia | Sedang | Bikin mock seller endpoint sendiri yang balas 402 |
-| Integrasi 1Shot mainnet butuh dana nyata | Sedang | Cek mode testnet; siapkan stablecoin kecil; ⚠️ konfirmasi |
-| Scope kebesaran untuk waktu hackathon | Tinggi | Pegang MVP §8; semua di luar itu = stretch |
-| Demo video harus tunjukkan semua integrasi | Sedang | Tulis skrip demo dari §5 lebih awal, rekam alur happy-path |
-
----
-
-## 10. Temuan Fase 0 (riset docs — sudah dijawab)
-
-Hasil riset docs resmi MetaMask / 1Shot / Venice. Confidence dari sumber yang dibaca.
-
-- **Redelegation + caveat granular — DIDUKUNG (risiko #1 hilang).** Redelegation lewat argumen `parentDelegation` di `createDelegation()`; child delegation `from` = delegate sebelumnya, dan **hanya bisa menyempit** wewenang (caveat menumpuk, tak bisa dihapus). Enforcer yang ada:
-  - Spending limit: `nativeTokenTransferAmount` (`NativeTokenTransferAmountEnforcer`), `erc20TransferAmount` (`ERC20TransferAmountEnforcer`), plus varian periodic/streaming.
-  - Whitelist: `allowedTargets` (`AllowedTargetsEnforcer`), `allowedMethods`, `allowedCalldata`.
-  - Dipasang via `createCaveatBuilder()` → `.addCaveat("allowedTargets", [...])`; berlaku juga pada redelegation.
-  - ⚠️ Verifikasi ejaan string builder ke types `@metamask/delegation-toolkit` saat coding.
-  - **Fallback** kalau redelegation rewel: 1 *direct delegation* per agent dari EOA root (paling terdokumentasi); escape hatch terakhir: custom caveat enforcer.
-- **7702 upgrade kena EOA USER.** Di flow browser ERC-7715, **wallet** yang melakukan 7702 — JANGAN tambahkan `authorizationList` ke payload relayer. Agent = delegate/redeemer, bukan akun yang di-upgrade.
-- **Venice = x402-native + OpenAI-compatible.** Base URL `https://api.venice.ai/api/v1`; chat `POST /chat/completions`; image `POST /image/generate`. x402: bayar per-request **USDC di Base** (header SIWX → `POST /x402/top-up` balas 402 → retry dgn `X-402-Payment`). Model id ambil dari `GET /api/v1/models` (jangan hardcode).
-- **ERC-7715 grant** = RPC `wallet_grantPermissions`; tipe izin: `native-token-stream`, `native-token-periodic`, `erc20-token-stream`, `erc20-token-periodic`, `erc20-token-allowance`, `erc20-revocation`. **Snaps ERC-7715 hanya jalan di Sepolia.**
-- **Chain:** Toolkit support banyak EVM (Base, Optimism, Arbitrum, Linea, Polygon + testnet Sepolia/Base Sepolia). 1Shot: **jangan hardcode — panggil `relayer_getCapabilities`** (mainnet terlihat: Ethereum/Optimism/Polygon/Base/Arbitrum/Celo; gas token: USDC/USDT/USDG/MUSD). Mantle TIDAK terkonfirmasi.
-
-### Keputusan arsitektur (dari temuan)
-
-**Target chain = Base; jalur izin = ERC-7710 Smart Account delegation (BUKAN ERC-7715).**
-Alasan: (a) memenuhi syarat MetaMask via *Smart Accounts*, (b) menghindari kurungan Sepolia-only milik 7715, (c) menyatukan chain — Venice x402 (USDC/Base) dan 1Shot (Base) hidup di tempat yang sama, (d) main track kita (x402+7710, Best Agent, A2A) tidak butuh 7715. Dev pakai **Base Sepolia** (Venice x402 di-mock di testnet); demo "real" di **Base mainnet** dengan USDC kecil (1Shot memang relayer mainnet).
-
-### Risiko tersisa (verifikasi live)
-1. **1Shot coverage di Base** — konfirmasi via `relayer_getCapabilities` sebelum commit (paling mungkin bikin demo patah).
-2. **Pendanaan USDC** kecil di Base untuk x402 + gas.
-3. **Ejaan enforcer & path image Venice** — cek ke types/SDK live (murah).
-4. (Non-teknis) Boleh >1 main track? & solo/tim — tanya panitia / tentukan scope.
-
----
-
-## 11. Langkah berikutnya
-1. ~~Riset docs (Fase 0)~~ — selesai, lihat §10.
-2. ~~Spike Fase 2~~ — **selesai & terverifikasi.** `POST /spike` di agent: plan → delegasi root (user→bount-AI) → redelegasi ke specialist dgn caveat (scope `erc20TransferAmount` + `allowedTargets`) → loop x402 (mock seller). Konstruksi+caveat+redelegasi+tanda tangan+hash **nyata** (toolkit); settlement on-chain & relay 1Shot masih disimulasi/gated. Dashboard memanggilnya dan merender jejak nyata.
-3. **Sisa Fase 2 (butuh kredensial/dana):**
-   - Konfirmasi `relayer_getCapabilities` 1Shot untuk Base (set `ONESHOT_RELAYER_URL`).
-   - Tukar EOA spike → MetaMask Smart Account (`toMetaMaskSmartAccount`, 7702 via wallet) dan eksekusi settlement x402 + relay 1Shot di Base (testnet→mainnet).
-4. Fase 3: Venice nyata (planner + image) menggantikan stub; seller x402 nyata / endpoint Venice x402.
+* **Perlindungan Terhadap Kebocoran Kunci:** API key Venice AI tidak pernah disimpan di disk atau dikirim dalam payload eksekusi biasa; ia ditarik langsung secara privat di dalam TEE menggunakan `t3n:host/kv`.
+* **Perlindungan Data Profil (PII):** Data profil sensitif (seperti email atau nama) disamarkan di browser menggunakan placeholders, didekripsi secara aman di dalam T3N outbound gateway, dan tidak pernah menyentuh memori WASM non-konfidensial.
