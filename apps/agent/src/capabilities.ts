@@ -71,13 +71,17 @@ function heuristicSelect(
   pool: Capability[],
 ): Capability[] {
   const q = request.toLowerCase();
-  const scored = pool.map((c) => ({
-    c,
-    score: c.keywords.reduce(
+  const scored = pool.map((c) => {
+    let score = 0;
+    if (c.id && q.includes(c.id.toLowerCase())) score += 2;
+    if (c.label && q.includes(c.label.toLowerCase())) score += 2;
+
+    score += c.keywords.reduce(
       (s, k) => (k && q.includes(k.toLowerCase()) ? s + 1 : s),
       0,
-    ),
-  }));
+    );
+    return { c, score };
+  });
 
   let picked = scored
     .filter((x) => x.score > 0)
@@ -85,8 +89,8 @@ function heuristicSelect(
     .map((x) => x.c);
 
   if (picked.length === 0) {
-    picked = pool.filter((c) => c.id === "research" || c.id === "writing");
-    if (picked.length === 0) picked = pool.slice(0, 2);
+    const generalAgent = pool.find((c) => c.id === "writing") || pool[0];
+    picked = generalAgent ? [generalAgent] : [];
   }
 
   return picked.slice(0, 4);
