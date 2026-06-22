@@ -15,6 +15,13 @@ export function AgentCard({
   onRemove?: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`npx bount-ai-cli run ${agent.id} "your instructions"`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <>
@@ -91,6 +98,25 @@ export function AgentCard({
               cost per use
             </span>
             <p className="font-mono text-sm tnum text-gold">${usd(agent.unitCostUsd)}</p>
+          </div>
+          <div className="space-y-1.5 pt-2 border-t border-line">
+            <span className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">
+              CLI Run Command
+            </span>
+            <div className="flex items-center gap-2 rounded bg-paper border border-line px-3 py-1.5">
+              <code className="font-mono text-xs text-ink-muted select-all break-all flex-1">
+                {`npx bount-ai-cli run ${agent.id} "your instructions"`}
+              </code>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopy();
+                }}
+                className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-gold hover:text-gold-hover transition-colors font-semibold"
+              >
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
           </div>
           {agent.creator && (
             <div className="space-y-1">
