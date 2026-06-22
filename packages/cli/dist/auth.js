@@ -71,19 +71,18 @@ export async function login() {
             }
         });
         server.listen(port, () => {
-            const webUrl = process.env.BOUNT_AI_WEB_URL || "http://localhost:3000";
+            const webUrl = process.env.BOUNT_AI_WEB_URL || "https://bount-ai-web.vercel.app";
             const authUrl = `${webUrl}/app/cli-auth?port=${port}`;
             console.log(`\n======================================================`);
             console.log(`🔑 bount-AI CLI Authorization`);
             console.log(`======================================================`);
             console.log(`Opening browser to: ${authUrl}\n`);
             console.log(`💡 Troubleshooting:`);
-            console.log(`1. Running Locally? Make sure your dev server is active:`);
-            console.log(`   👉 Run: pnpm dev`);
+            console.log(`1. Using Production (Default)?`);
+            console.log(`   👉 Make sure you are logged in on: https://bount-ai-web.vercel.app`);
+            console.log(`2. Running Locally? Run: pnpm dev`);
+            console.log(`   👉 Set env: export BOUNT_AI_WEB_URL=http://localhost:3000`);
             console.log(`   👉 Local URL: http://localhost:3000/app/cli-auth?port=${port}`);
-            console.log(`2. Using Production? Replace with your deployed Vercel URL:`);
-            console.log(`   👉 URL: https://your-app-domain.vercel.app/app/cli-auth?port=${port}`);
-            console.log(`   👉 Set env: export BOUNT_AI_WEB_URL=https://your-app-domain.vercel.app`);
             console.log(`======================================================\n`);
             openBrowser(authUrl);
         });
