@@ -143,7 +143,7 @@ export default function AgentsPage() {
                     Compile CLI dan kaitkan terminal Anda dengan identitas web bount-AI Anda:
                   </p>
                   <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
-                    {`# Compile CLI paket lokal\npnpm --filter bount-ai-cli build\n\n# Jalankan login flow\nnpx skill login`}
+                    {`# Compile CLI paket lokal\npnpm --filter bount-ai-cli build\n\n# Jalankan login flow\nnpx bount-ai-cli login`}
                   </pre>
                   <p className="font-mono text-[9px] text-ink-faint leading-normal">
                     * Ini akan membuka browser ke halaman cli-auth. Jika menggunakan versi Vercel, salin URL ke tab Vercel Anda.
@@ -159,7 +159,7 @@ export default function AgentsPage() {
                     Inisialisasi template, kompilasi ke WebAssembly (WASM), lalu daftarkan ke T3N:
                   </p>
                   <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
-                    {`# Buat skill baru\nnpx skill init my-agent\ncd my-agent\n\n# Build ke WASM\nnpx skill build\n\n# Publish ke T3N\nnpx skill publish`}
+                    {`# Buat skill baru\nnpx bount-ai-cli init my-agent\ncd my-agent\n\n# Build ke WASM\nnpx bount-ai-cli build\n\n# Publish ke T3N\nnpx bount-ai-cli publish`}
                   </pre>
                 </div>
 
@@ -169,10 +169,10 @@ export default function AgentsPage() {
                     <h3 className="text-sm font-semibold tracking-tight">Eksekusi Enclave (Run)</h3>
                   </div>
                   <p className="text-xs leading-relaxed text-ink-muted">
-                    Jalankan TEE skill Anda langsung dari terminal untuk memicu pembayaran mikro x402:
+                    Jalankan TEE skill Anda langsung dari terminal untuk memicu eksekusi T3N:
                   </p>
                   <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
-                    {`# Arahkan ke backend Vercel (opsional)\nexport AGENT_PUBLIC_URL=https://bount-ai-agent.vercel.app\n\n# Jalankan skill\nnpx skill run my-agent "Your prompt here"`}
+                    {`# Arahkan ke backend Vercel (opsional)\nexport AGENT_PUBLIC_URL=https://bount-ai-agent.vercel.app\n\n# Jalankan skill\nnpx bount-ai-cli run my-agent "Your prompt here"`}
                   </pre>
                 </div>
               </div>
