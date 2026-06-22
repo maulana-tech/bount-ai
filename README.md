@@ -404,13 +404,16 @@ pnpm dev:agent    # agent only → http://localhost:8787
    * Navigate to `/app` → check your **Total Earnings** and list of custom published TEE skills.
    * Go to `/app/agents` → click **Create Agent** to register a new specialist in the global catalog.
 
-### 5. CLI Tool Walkthrough
+### 5. CLI Tool Walkthrough 🛠️
 
-bount-AI provides a developer CLI tool, published on the public npm registry as [`bount-ai-cli`](https://www.npmjs.com/package/bount-ai-cli). This CLI allows developers to bootstrap, build, publish, and execute custom skills inside secure TEE enclaves.
+bount-AI provides a developer CLI tool, published on the public npm registry as [`bount-ai-cli`](https://www.npmjs.com/package/bount-ai-cli). This CLI allows developers to bootstrap, compile, build, publish, and execute custom TEE skills inside secure enclaves.
 
-#### Installation Options
+#### 📦 Installation Options
 
 You can either install the CLI globally, use `npx` to run it on-the-fly, or run it from source inside the monorepo.
+
+> [!TIP]
+> Using **npx** allows you to run the commands without global installation overhead. Both `npx bount-ai-cli` and `npx -p bount-ai-cli skill` are fully supported.
 
 ##### Option A: Global Installation (Recommended)
 Install the package globally:
@@ -425,8 +428,9 @@ skill <command>
 ##### Option B: Run on-the-fly with `npx`
 Run commands directly without installing:
 ```bash
-npx -p bount-ai-cli skill <command>
+npx bount-ai-cli <command>
 ```
+*(Or use the explicit binary reference: `npx -p bount-ai-cli skill <command>`)*
 
 ##### Option C: Run from Source (For contributors/local development)
 If you've cloned the repository and want to run it from source:
@@ -441,38 +445,51 @@ If you've cloned the repository and want to run it from source:
 
 ---
 
-#### CLI Commands Sequence
+#### 🚀 CLI Commands Sequence
 
-Here is the step-by-step developer workflow using the global `skill` command (replace with `npx -p bount-ai-cli skill` or `node packages/cli/dist/cli.js` depending on your option above):
+Here is the step-by-step developer workflow using the global `skill` command (replace with `npx bount-ai-cli` or `node packages/cli/dist/cli.js` depending on your option above):
 
-1. **Login:** Authenticate your CLI session.
-   ```bash
-   skill login
-   ```
-   This boots a local callback server (on port `12345`) and redirects your browser to the bount-AI dashboard at `/app/cli-auth`. After signing the authorization signature with your MetaMask wallet, the terminal receives your session token.
+##### Step 1: Login 🔑
+Authenticate your local CLI session with your bount-AI identity:
+```bash
+skill login
+```
+* **How it works:** This boots a local callback server (on port `12345`) and automatically opens your browser.
+* **Redirection:** By default, it opens the live app gateway: `https://bount-ai-web.vercel.app/app/cli-auth?port=12345`.
+* **Action:** Log in with your MetaMask wallet on the dashboard and click **"Authorize CLI Login"** to sign the EIP-191 challenge. The session token is securely returned to your local machine and saved in `~/.config/bount-ai/config.json`.
 
-2. **Initialize:** Bootstrap a new custom TypeScript TEE skill template.
-   ```bash
-   skill init my-premium-summarizer
-   ```
-   This creates a new project directory `my-premium-summarizer` containing a template skill configuration and standard WASI host API entrypoint.
+> [!NOTE]
+> **Developing locally?** You can redirect the CLI to your local frontend by running:
+> `export BOUNT_AI_WEB_URL=http://localhost:3000` before running the login command.
 
-3. **Build:** Compile the TypeScript skill into a secure WebAssembly (WASM) component using standard `jco` and `wasi-js` TEE tooling:
-   ```bash
-   # Navigate to the skill folder first:
-   cd my-premium-summarizer
-   skill build
-   ```
+##### Step 2: Initialize a TEE Skill 📁
+Bootstrap a new custom TypeScript TEE skill template:
+```bash
+skill init my-premium-summarizer
+```
+* **Result:** Creates a new directory `my-premium-summarizer` containing an `index.ts` template pre-wired to resolve secrets securely via the Terminal 3 host API (`t3n:host/kv`) and execute confidential tasks.
 
-4. **Publish:** Securely upload and publish the compiled WASM component to the bount-AI agent registry:
-   ```bash
-   skill publish
-   ```
+##### Step 3: Build the Skill ⚙️
+Navigate into your skill's directory and compile the TypeScript code into a secure WebAssembly (WASM) component:
+```bash
+cd my-premium-summarizer
+skill build
+```
+* **Result:** Generates the secure sandbox binary `dist/index.wasm` utilizing standard `jco` and `wasi-js` TEE enclave tooling.
 
-5. **Run:** Execute your secure TEE skill from the terminal, triggering the budget checks and x402 payment flow under the hood:
-   ```bash
-   skill run my-premium-summarizer "Summarize competitor pricing"
-   ```
+##### Step 4: Publish to the Registry 📤
+Securely upload and register your compiled TEE skill component to the bount-AI registry:
+```bash
+skill publish
+```
+* **How it works:** Reads the current version, prompts for a patch version bump (e.g. `0.1.0 -> 0.1.1` to prevent version collision on-chain), and uploads the WASM bytecode to the agent registry.
+
+##### Step 5: Execute the Secure Skill 🏃‍♂️
+Trigger and execute your secure TEE skill from the terminal, which automatically processes the budget checks and x402 payment flow under the hood:
+```bash
+skill run my-premium-summarizer "Summarize competitor pricing"
+```
+* **Result:** The agent orchestrator runs your WASM component inside the sandboxed enclave, processes the delegated spending authorization, executes the prompt securely, and prints verified execution proofs along with the budget ledger.
 
 ### Scripts
 
