@@ -446,7 +446,7 @@ export default function Page() {
                     return (
                       <Link
                         key={c.id}
-                        href="/app/chat"
+                        href={`/app/chat?agent=${c.id}&label=${encodeURIComponent(c.label)}`}
                         className="group relative border border-line bg-panel p-4 transition-colors hover:border-line-strong"
                       >
                         {i === 0 && u.count > 0 && (
