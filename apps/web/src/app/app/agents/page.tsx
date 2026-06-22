@@ -143,7 +143,7 @@ export default function AgentsPage() {
                     Compile CLI dan kaitkan terminal Anda dengan identitas web bount-AI Anda:
                   </p>
                   <pre className="font-mono text-[10px] bg-paper border border-line p-2.5 rounded overflow-x-auto text-ink-muted select-all">
-                    {`# Compile CLI paket lokal\npnpm --filter @concierge/cli build\n\n# Jalankan login flow\nnpx skill login`}
+                    {`# Compile CLI paket lokal\npnpm --filter bount-ai-cli build\n\n# Jalankan login flow\nnpx skill login`}
                   </pre>
                   <p className="font-mono text-[9px] text-ink-faint leading-normal">
                     * Ini akan membuka browser ke halaman cli-auth. Jika menggunakan versi Vercel, salin URL ke tab Vercel Anda.
