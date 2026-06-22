@@ -10,7 +10,7 @@ To make the package public and publishable, we need to modify the private status
 - **File**: `packages/cli/package.json`
 - **Modifications**:
   - Remove `"private": true` (or change to `"private": false`).
-  - Rename the package from `@concierge/cli` to a unique name, e.g., `bount-ai-cli` or `bount-ai-skill`.
+  - Rename the package from `@concierge/cli` to a unique name, e.g., `bount-ai-cli` or `bount-ai-skill` (already updated in package.json to `bount-ai-cli`).
 
 ```json
 {
@@ -31,7 +31,7 @@ To make the package public and publishable, we need to modify the private status
 Before publishing, compile the TypeScript code inside the CLI package:
 
 ```bash
-pnpm --filter @concierge/cli build
+pnpm --filter bount-ai-cli build
 ```
 
 ---
