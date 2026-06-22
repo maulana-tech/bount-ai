@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Capability } from "@concierge/shared";
 import { usd } from "@/lib/utils";
 import { Modal } from "./Modal";
+import { useRouter } from "next/navigation";
 
 export function AgentCard({
   agent,
@@ -16,6 +17,7 @@ export function AgentCard({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const router = useRouter();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(`npx bount-ai-cli run ${agent.id} "your instructions"`);
@@ -52,14 +54,25 @@ export function AgentCard({
             </span>
             <span className="font-mono text-[11px] text-ink-muted">{agent.product}</span>
           </div>
-          {custom && onRemove && (
+          <div className="flex items-center gap-3">
+            {custom && onRemove && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                className="font-mono text-[11px] uppercase tracking-wide text-ink-faint transition-colors hover:text-danger"
+              >
+                remove
+              </button>
+            )}
             <button
-              onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="font-mono text-[11px] uppercase tracking-wide text-ink-faint transition-colors hover:text-danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/app/chat?agent=${agent.id}&label=${encodeURIComponent(agent.label)}`);
+              }}
+              className="font-mono text-[11px] uppercase tracking-wide text-gold hover:text-gold-hover transition-colors font-semibold"
             >
-              remove
+              run →
             </button>
-          )}
+          </div>
         </div>
       </div>
 
@@ -128,6 +141,14 @@ export function AgentCard({
               </p>
             </div>
           )}
+          <button
+            onClick={() => {
+              router.push(`/app/chat?agent=${agent.id}&label=${encodeURIComponent(agent.label)}`);
+            }}
+            className="w-full mt-6 rounded bg-gold py-2.5 text-sm font-medium text-white transition-colors hover:bg-gold-hover text-center"
+          >
+            Run in Chat
+          </button>
         </div>
       </Modal>
     </>
