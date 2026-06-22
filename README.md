@@ -59,7 +59,7 @@ The net effect: **autonomous agents that transact are a security liability**, so
 
 - ✅ **Grant a budget, not a key** — sign a spending-limit delegation (caveat `erc20TransferAmount`) capped at, e.g., $5.
 - ✅ **Secure TEE Enclaves (Terminal 3 ADK)** — Custom agents/skills run inside verified, hardware-secured WASM enclaves. No one, not even the node operator, can tamper with or inspect execution.
-- ✅ **Local CLI Development (`npx skill`)** — Developers can bootstrap, compile, publish, and securely execute skills directly from their terminal.
+- ✅ **Local CLI Development (`bount-ai-cli`)** — Developers can bootstrap, compile, publish, and securely execute skills directly from their terminal using the global `skill` CLI.
 - ✅ **Session-locked Role Portal** — Cryptographic signature login locks users as either Buyers (granted budget/use agents) or Sellers (earn fees on published TEE skills).
 - ✅ **The agent plans and delegates** — bount-AI breaks a request into sub-tasks and **redelegates** narrowed sub-budgets to specialist agents (research, copywriting, image, …).
 - ✅ **Each agent pays for what it uses** — service payments settle through an **x402** `402 → pay → retry` loop.
@@ -94,7 +94,7 @@ flowchart TB
     end
 
     subgraph CLIWorkspace["CLI Workspace"]
-        CLI["npx skill CLI<br/>init · build · publish · run"]
+        CLI["skill CLI (bount-ai-cli)<br/>init · build · publish · run"]
         Callback["Local Callback Svr<br/>Port 12345"]
     end
 
@@ -284,13 +284,13 @@ OpenAI-compatible client. `veniceChat` powers research/copywriting/translation; 
 - **State:** a single `BudgetProvider` (React context + localStorage) is the source of truth for cap / spent / signed grant, shared across dashboard and chat
 - **Routes:** `/` landing · `/app` dashboard · `/app/chat` live agent flow · `/app/agents` registry + create
 
-### Layer 6 — Terminal 3 TEE ADK & npx skill CLI (`packages/cli`, `apps/agent/src/spike.ts`)
+### Layer 6 — Terminal 3 TEE ADK & bount-ai-cli (`packages/cli`, `apps/agent/src/spike.ts`)
 
 bount-AI integrates secure execution using the **Terminal 3 Agent Dev Kit (TEE Enclaves)** and a custom CLI client:
 
 1. **Host-Excluding Bundler:** The `packages/cli` tool compiles TypeScript/JavaScript skills locally. Since host APIs (e.g. `t3n:host/kv`) are resolved inside the enclave container itself, `compile.ts` utilizes `esbuild` with `external: ["t3n:host/*"]` to safely exclude host imports during local asset building.
 2. **TEE Sandbox Execution:** Compiled WASM binaries are published to the agent backend under `published_skills/`. When a skill is executed, the agent orchestrator (`spike.ts`) initiates the WASM sandbox environment, outputs enclave validation status logs, and prepends security verification headers.
-3. **Cryptographic Gateway Auth:** The `npx skill login` command boots a local callback server on port 12345. It redirects the terminal session to `/app/cli-auth` on the web app. The frontend prompts a MetaMask smart account EIP-191 signature to confirm ownership and returns the verified auth session back to the local CLI callback.
+3. **Cryptographic Gateway Auth:** The `skill login` command boots a local callback server on port 12345. It redirects the terminal session to `/app/cli-auth` on the web app. The frontend prompts a MetaMask smart account EIP-191 signature to confirm ownership and returns the verified auth session back to the local CLI callback.
 
 ---
 
@@ -340,7 +340,7 @@ bount-AI/
 │           └── shared.ts           # agent-side types + CAPABILITIES copy
 ├── packages/
 │   ├── shared/                     # shared domain types + capability registry
-│   └── cli/                        # local npx skill CLI implementation
+│   └── cli/                        # bount-ai-cli implementation
 ├── CONTEXT.md · PROJECT.md · UI_GUIDE.md · CLAUDE.md
 ├── README.md                       # ← you are here
 └── LICENSE
@@ -404,26 +404,74 @@ pnpm dev:agent    # agent only → http://localhost:8787
    * Navigate to `/app` → check your **Total Earnings** and list of custom published TEE skills.
    * Go to `/app/agents` → click **Create Agent** to register a new specialist in the global catalog.
 
-### 5. CLI Tool Walkthrough (`npx skill`)
+### 5. CLI Tool Walkthrough
 
-bount-AI provides a local developer CLI allowing you to build and run skills inside secure TEE enclaves:
+bount-AI provides a developer CLI tool, published on the public npm registry as [`bount-ai-cli`](https://www.npmjs.com/package/bount-ai-cli). This CLI allows developers to bootstrap, build, publish, and execute custom skills inside secure TEE enclaves.
 
-1. **Login:** Compile the CLI package using `pnpm --filter bount-ai-cli build`, then run `npx skill login` (or run locally using `node packages/cli/dist/cli.js login`). This spawns a local server and redirects you to `/app/cli-auth` to authorize your terminal.
-2. **Initialize:** Bootstrap a new custom TypeScript skill:
+#### Installation Options
+
+You can either install the CLI globally, use `npx` to run it on-the-fly, or run it from source inside the monorepo.
+
+##### Option A: Global Installation (Recommended)
+Install the package globally:
+```bash
+npm install -g bount-ai-cli
+```
+This registers the global `skill` command. You can then run:
+```bash
+skill <command>
+```
+
+##### Option B: Run on-the-fly with `npx`
+Run commands directly without installing:
+```bash
+npx -p bount-ai-cli skill <command>
+```
+
+##### Option C: Run from Source (For contributors/local development)
+If you've cloned the repository and want to run it from source:
+1. Build the workspace CLI package:
    ```bash
-   npx skill init my-premium-summarizer
+   pnpm --filter bount-ai-cli build
    ```
-3. **Build:** Compile your TypeScript skill to a WebAssembly (WASM) binary using standard `jco` and `wasi-js` TEE tooling:
+2. Run using node:
    ```bash
-   npx skill build
+   node packages/cli/dist/cli.js <command>
    ```
-4. **Publish:** Upload your compiled WASM skill to the bount-AI registry:
+
+---
+
+#### CLI Commands Sequence
+
+Here is the step-by-step developer workflow using the global `skill` command (replace with `npx -p bount-ai-cli skill` or `node packages/cli/dist/cli.js` depending on your option above):
+
+1. **Login:** Authenticate your CLI session.
    ```bash
-   npx skill publish
+   skill login
    ```
-5. **Run:** Run your secure TEE skill from the terminal, triggering the x402 payment flow under the hood:
+   This boots a local callback server (on port `12345`) and redirects your browser to the bount-AI dashboard at `/app/cli-auth`. After signing the authorization signature with your MetaMask wallet, the terminal receives your session token.
+
+2. **Initialize:** Bootstrap a new custom TypeScript TEE skill template.
    ```bash
-   npx skill run my-premium-summarizer --prompt "Summarize competitor pricing"
+   skill init my-premium-summarizer
+   ```
+   This creates a new project directory `my-premium-summarizer` containing a template skill configuration and standard WASI host API entrypoint.
+
+3. **Build:** Compile the TypeScript skill into a secure WebAssembly (WASM) component using standard `jco` and `wasi-js` TEE tooling:
+   ```bash
+   # Navigate to the skill folder first:
+   cd my-premium-summarizer
+   skill build
+   ```
+
+4. **Publish:** Securely upload and publish the compiled WASM component to the bount-AI agent registry:
+   ```bash
+   skill publish
+   ```
+
+5. **Run:** Execute your secure TEE skill from the terminal, triggering the budget checks and x402 payment flow under the hood:
+   ```bash
+   skill run my-premium-summarizer "Summarize competitor pricing"
    ```
 
 ### Scripts
@@ -475,7 +523,7 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 - [x] Wallet-signed **ERC-7710** spending-limit grant (off-chain, no gas)
 - [x] **Redelegation** to specialist agents with narrowed caveats
 - [x] **Terminal 3 TEE Enclaves** and custom sandbox WASM compiler
-- [x] Local developer command CLI (**npx skill**)
+- [x] Local developer command CLI (**bount-ai-cli** / **skill**)
 - [x] Real budget accounting (cap / spent) wired from `SpikeResult`
 - [x] **x402** `402 → pay → retry` loop vs a local mock seller
 - [x] **Venice AI** text + image generation in the main flow
@@ -501,7 +549,7 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 | Wallet-signed ERC-7710 grant | ✅ Live | EIP-712, off-chain, no gas |
 | Redelegation to specialists | ✅ Live | Narrow-only caveats; hashes in `SpikeResult.proofs` |
 | Terminal 3 TEE Enclaves | ✅ Live | WASM secure sandbox execution on Hono agent |
-| Local npx skill CLI | ✅ Live | init, build, publish, run commands supported |
+| Local bount-ai-cli | ✅ Live | init, build, publish, run commands supported |
 | EIP-191 CLI Auth Gateway | ✅ Live | Browser smart-account login redirects to CLI callback |
 | Real budget meter (cap / spent) | ✅ Live | From `SpikeResult`; $5 free-credit fallback |
 | x402 payment loop | ✅ Live | Against local **mock seller** |
