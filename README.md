@@ -111,11 +111,11 @@ flowchart TB
 
     UI --> T3N_Auth
     UI --> KV_UI
-    KV_UI -. tenant.maps .-> Conf_KV
-    T3N_Auth -. handshake .-> TEE_Cluster
+    KV_UI -->|tenant maps| Conf_KV
+    T3N_Auth -->|handshake| TEE_Cluster
 
     CLI --> Compiler
-    Compiler -. publish contract .-> T3N_Client
+    Compiler -->|publish contract| T3N_Client
     
     Orchestrator --> T3N_Client
     T3N_Client --> Sandbox
