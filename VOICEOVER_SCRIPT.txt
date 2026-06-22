@@ -1,0 +1,17 @@
+# bount-AI Demo Video Voiceover Script
+# Copy and paste this script directly into your AI Voice Generator (e.g. ElevenLabs, OpenAI TTS, etc.)
+
+[Paragraph 1 - Introduction]
+Hello everyone! Welcome to the bount-AI demo video. Running custom AI agents in the cloud today introduces major security challenges. Credentials like API keys are loaded directly into memory, exposing them to operators. Personally Identifiable Information (PII) is passed in plaintext, and there is no cryptographic way to verify that your agents run inside a secure enclave. bount-AI solves this by integrating the Terminal 3 Agent Dev Kit.
+
+[Paragraph 2 - Identity & Dashboard]
+Here, users log in using MetaMask. This triggers a secure handshake with the T3N SDK to generate a portable decentralized identity: did:t3n. On the main Dashboard, we can monitor our on-chain budget delegation configured via the ERC-7710 standard, as well as real-time spent details. Through our integrated T3nSecretsManager, sensitive credentials such as Venice AI keys are stored encrypted in the T3N KV store. These keys are resolved only within the enclave's memory at runtime and are never exposed to external hosts.
+
+[Paragraph 3 - Chat & TEE Agent Execution]
+In the Agents registry, we can explore various specialist capabilities—ranging from research and copywriting to image generation. Let's run an agent. Simply click 'Run', and we are immediately redirected to the Chat page with the chosen agent pre-filled along with its starter prompt. When we submit the request, our orchestrator invokes a contract execution on a T3N Intel TDX TEE cluster. The WebAssembly enclave runs in isolation, fetches API keys from T3N KV storage, sanitizes PII using secure placeholders, and retrieves the output securely. We can track the execution logs, verify the tamper-proof logs on the T3N ledger, and see our budget balance updated in real-time.
+
+[Paragraph 4 - Developer CLI]
+For developers, bount-AI provides a powerful CLI suite called bount-ai-cli. With just a few terminal commands, developers can authenticate their local session using login, compile their custom agent code into a WebAssembly guest component with build, publish it to the T3N enclave network using publish, and run test executions via run. Newly published enclaves automatically become active in the web Dashboard registry and are instantly available for users.
+
+[Paragraph 5 - Outro]
+bount-AI combines the ease of a modern conversational UI with the security guarantees of military-grade TEE enclaves. Verifiable, secure, and fully autonomous. Check out our live dApp or publish your own TEE skills today! Thank you for watching!
