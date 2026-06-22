@@ -83,9 +83,12 @@ export async function login(): Promise<Credentials> {
     });
 
     server.listen(port, () => {
-      const authUrl = `http://localhost:3000/app/cli-auth?port=${port}`;
+      const webUrl = process.env.BOUNT_AI_WEB_URL || "https://bount-ai-app.vercel.app";
+      const authUrl = `${webUrl}/app/cli-auth?port=${port}`;
+      console.log(`\n[bount-AI] Authenticating via: ${webUrl}`);
+      console.log(`(To use a local development server, run: BOUNT_AI_WEB_URL=http://localhost:3000 skill login)\n`);
       console.log(`Opening browser to authenticate...`);
-      console.log(`If browser does not open, go to: ${authUrl}`);
+      console.log(`If browser does not open, go to: ${authUrl}\n`);
       openBrowser(authUrl);
     });
 
