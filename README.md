@@ -408,7 +408,7 @@ pnpm dev:agent    # agent only → http://localhost:8787
 
 bount-AI provides a local developer CLI allowing you to build and run skills inside secure TEE enclaves:
 
-1. **Login:** Run `pnpm --filter @concierge/cli login` (or compile and run locally). This spawns a local server and redirects you to `/app/cli-auth` to authorize your terminal via wallet signature.
+1. **Login:** Compile the CLI package using `pnpm --filter bount-ai-cli build`, then run `npx skill login` (or run locally using `node packages/cli/dist/cli.js login`). This spawns a local server and redirects you to `/app/cli-auth` to authorize your terminal.
 2. **Initialize:** Bootstrap a new custom TypeScript skill:
    ```bash
    npx skill init my-premium-summarizer
