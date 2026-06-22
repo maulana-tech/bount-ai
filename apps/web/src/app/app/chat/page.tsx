@@ -320,7 +320,7 @@ function ImageCard({ src, caption }: { src: string; caption: string }) {
     const url =
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://bount-ai-app.vercel.app";
+        : "https://bount-ai-web.vercel.app";
     const text = `Made with bount-AI — "${caption.slice(0, 120)}". Give an AI a budget, not your wallet: ERC-7710 delegation + x402 + Venice AI.`;
     const intent = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(intent, "_blank", "noopener,noreferrer");
