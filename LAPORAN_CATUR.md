@@ -27,7 +27,7 @@
 Dulu versi kontrak di-*hardcode* `"0.1.0"`, jadi tiap publish ulang error `version is not higher than current version`. Sekarang sudah otomatis.
 - `packages/cli/src/publish.ts` — baca versi dari `Cargo.toml`, sarankan naik 1 (mis. `0.1.0 → 0.1.1`), tanya konfirmasi, tulis balik ke `Cargo.toml`, lalu kirim versinya ke server.
 - `apps/agent/src/app.ts` (endpoint `/publish-skill`) & `apps/agent/src/integrations/t3n.ts` — terima versi dinamis, bukan `"0.1.0"` lagi.
-- **Sudah diverifikasi:** `pnpm --filter @concierge/cli typecheck` & `--filter @concierge/agent typecheck` lolos. Logika baca+naik versi sudah dites (0.1.0 → 0.1.1).
+- **Sudah diverifikasi:** `pnpm --filter bount-ai-cli typecheck` & `--filter @concierge/agent typecheck` lolos. Logika baca+naik versi sudah dites (0.1.0 → 0.1.1).
 
 ### Build pipeline — CLI sekarang masak Rust beneran (kode siap)
 - `packages/cli/src/compile.ts` — kalau ada `Cargo.toml`, jalankan `cargo build --release --target wasm32-wasip2` lalu salin `.wasm` asli ke `dist/index.wasm`. (Jalur lama TypeScript/mock 8-byte tetap ada sebagai cadangan.)
