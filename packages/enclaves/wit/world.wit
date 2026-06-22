@@ -1,13 +1,41 @@
-package t3n:enclave;
+/// bount-AI TEE contract — confidential Venice AI inference inside a T3N enclave.
+///
+/// Imports the host capabilities the contract actually uses (capability set =
+/// exactly these imports — anything not imported, the contract cannot do):
+///   - tenant-context: tenant DID (used to build the `z:<tid>:secrets` map name)
+///   - logging:        debug / info / error lines
+///   - kv-store:       reads the `secrets` map for the Venice API key
+///   - http:           outbound call to Venice (no PII crosses the boundary)
+///
+/// The Venice API key lives in the tenant's private KV map `z:<tid>:secrets`
+/// under the key `venice_api_key`. The contract resolves the full map name at
+/// runtime from `tenant-context.tenant-did()`. The map is created and seeded by
+/// the tenant SDK before the contract runs — the key never enters WASM memory
+/// from the untrusted side, and never leaves the enclave.
+package z:bount-ai@0.1.1;
 
-interface contracts {
-    execute: func(input: string) -> result<string, string>;
-}
-
-world enclave {
-    // Confidential host capabilities (see wit/host.wit).
-    import kv;
-    import http;
+world bount-ai {
+    import host:tenant/tenant-context@1.0.0;
+    import host:interfaces/logging@2.1.0;
+    import host:interfaces/kv-store@2.1.0;
+    import host:interfaces/http@2.1.0;
 
     export contracts;
+}
+
+interface contracts {
+    /// Standard 3-field envelope used by all contracts callable from the node.
+    /// `input`        — JSON-serialized request payload specific to the function.
+    /// `user-profile` — always None for tenant contracts (hardcoded at dispatch).
+    /// `context`      — JSON-serialized DynamicContext (node-minted, trusted).
+    record generic-input {
+        input:        option<list<u8>>,
+        user-profile: option<list<u8>>,
+        context:      option<list<u8>>,
+    }
+
+    /// Confidential Venice chat completion run inside the TEE.
+    /// Input  (JSON): { "prompt": "...", "model"?: "..." }
+    /// Output (JSON): { "status": "success", "model": "...", "output": "..." }
+    chat: func(req: generic-input) -> result<list<u8>, string>;
 }

@@ -101,10 +101,13 @@ export async function executeT3nContract(name: string, input: string, userApiKey
   try {
     const tailName = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
     console.log(`[T3N SDK] Executing contract tail "${tailName}" v${version} on T3N TEE...`);
+    // The enclave's `contracts` interface exposes a named `chat` function
+    // (T3N convention — no generic `execute`/`dispatch`). Its `generic-input.input`
+    // is the JSON request the contract parses: { prompt, model? }.
     const executeResult = await clients.tenant.contracts.execute(tailName, {
       version,
-      functionName: "execute",
-      input: input,
+      functionName: "chat",
+      input: { prompt: input },
     });
     console.log(`[T3N SDK] Real T3N execution success:`, executeResult);
     return executeResult;
