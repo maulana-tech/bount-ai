@@ -7,11 +7,11 @@
 *Give an AI a budget — not your wallet. Bounded, revocable spending powered by MetaMask Smart Accounts (ERC-7710 delegation), x402 payments, Venice AI, and compiled in Terminal 3 TEE enclaves.*
 
 [![Challenge](https://img.shields.io/badge/Bounty-Terminal%203%20ADK-purple?style=for-the-badge)](https://terminal3.io)
-[![Live App](https://img.shields.io/badge/Live%20App-bount--ai--app.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://bount-ai-app.vercel.app)
+[![Live App](https://img.shields.io/badge/Live%20App-bount--ai--web.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://bount-ai-web.vercel.app)
 [![Agent API](https://img.shields.io/badge/Agent%20API-bount--ai--agent.vercel.app-00C7B7?style=for-the-badge&logo=vercel&logoColor=white)](https://bount-ai-agent.vercel.app/health)
 [![Built with](https://img.shields.io/badge/Built%20with-MetaMask%20Smart%20Accounts-F6851B?style=for-the-badge&logo=metamask&logoColor=white)](https://docs.metamask.io/delegation-toolkit/)
 
-[Try the dApp ↗](https://bount-ai-app.vercel.app/) · [Agent health ↗](https://bount-ai-agent.vercel.app/health) · Demo Video *(coming soon)*
+[Try the dApp ↗](https://bount-ai-web.vercel.app/) · [Agent health ↗](https://bount-ai-agent.vercel.app/health) · Demo Video *(coming soon)*
 
 </div>
 
@@ -242,7 +242,7 @@ bount-AI is **general, not task-specific**. The capability registry lives in `pa
 
 | Component | URL / Address |
 | --- | --- |
-| **Web app** | [bount-ai-app.vercel.app](https://bount-ai-app.vercel.app) |
+| **Web app** | [bount-ai-web.vercel.app](https://bount-ai-web.vercel.app) |
 | **Agent API** | [bount-ai-agent.vercel.app](https://bount-ai-agent.vercel.app/health) · `GET /spike/agent` |
 | **Chain** | Base Sepolia (chain id `84532`) |
 | **DelegationManager** (MetaMask Smart Accounts Kit) | `0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3` |
@@ -557,7 +557,7 @@ bount-AI is fully integrated with key decentralized permission and micro-billing
 | Custom agents | ✅ Live | localStorage → `/spike` body → merged into pool |
 | On-chain settlement | ✅ Live | Real USDC transfer on Base Sepolia — proof tx |
 | 1Shot relayer | ⏳ Stub | Capability probe gated by `ONESHOT_RELAYER_URL` |
-| Live web + agent (Vercel) | ✅ Live | [app](https://bount-ai-app.vercel.app) · [agent](https://bount-ai-agent.vercel.app/health) |
+| Live web + agent (Vercel) | ✅ Live | [app](https://bount-ai-web.vercel.app) · [agent](https://bount-ai-agent.vercel.app/health) |
 | Demo video | ⏳ Planned | Script outline ready |
 
 ---
