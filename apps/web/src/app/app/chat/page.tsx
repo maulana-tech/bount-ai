@@ -26,6 +26,15 @@ const SUGGESTS = [
   "create a poster concept for a music festival",
 ];
 
+const STARTER_PROMPTS: Record<string, string> = {
+  research: "research the latest trends about ",
+  writing: "write a short product description for a coffee subscription service",
+  image: "create a poster concept for a music festival",
+  video: "create a short video clip of a flying drone",
+  audio: "generate a voiceover saying hello world",
+  translation: "translate this sentence into Spanish: hello how are you",
+};
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -37,6 +46,17 @@ export default function ChatPage() {
 
   useEffect(() => {
     inputRef.current?.focus();
+    
+    // Parse query params to auto-select/pre-fill agent
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const agentId = params.get("agent");
+      const agentLabel = params.get("label");
+      if (agentId) {
+        const starter = STARTER_PROMPTS[agentId] || `Run custom agent ${agentLabel || agentId} to `;
+        setInput(starter);
+      }
+    }
   }, []);
 
   useEffect(() => {
