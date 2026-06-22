@@ -7,7 +7,7 @@ export async function runSkill(skillId, prompt) {
     }
     console.log(`\n[bount-AI] Invoking skill "${skillId}" securely inside TEE Node...`);
     console.log(`[Prompt]: "${prompt}"`);
-    const agentUrl = process.env.AGENT_PUBLIC_URL || "http://localhost:8787";
+    const agentUrl = process.env.AGENT_PUBLIC_URL || "https://bount-ai-agent.vercel.app";
     try {
         const res = await fetch(`${agentUrl}/spike`, {
             method: "POST",
