@@ -75,7 +75,7 @@ export async function publishSkill() {
 
   console.log(`\n[bount-AI] Publishing TEE skill "${skillName}" v${newVersion} onto Terminal 3 Network (T3N)...`);
 
-  const agentUrl = process.env.AGENT_PUBLIC_URL || "http://localhost:8787";
+  const agentUrl = process.env.AGENT_PUBLIC_URL || "https://bount-ai-agent.vercel.app";
 
   try {
     const wasmBuffer = fs.readFileSync(wasmFile);
