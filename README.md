@@ -240,7 +240,7 @@ bount-AI/
 │   │   └── wit/                    # WIT Interfaces (host.wit & world.wit)
 │   ├── cli/                        # bount-ai-cli implementation
 │   └── shared/                     # Shared TypeScript domain contracts
-├── CONTEXT.md · PROJECT.md · Terminal3.md · RESOURCES.md
+├── PROJECT.md                       # Project specification
 ├── README.md                       # ← You are here
 └── LICENSE
 ```
