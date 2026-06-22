@@ -1,7 +1,7 @@
 {
-  "name": "@concierge/cli",
+  "name": "bount-ai-cli",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "bin": {
     "skill": "./dist/cli.js"
